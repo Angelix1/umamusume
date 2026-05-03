@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"> -->
+    <title>Skill Effect Viewer - Umamusume Data Parser</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            background: #f0f2f5;
+            font-family: 'Segoe UI', Roboto, system-ui, -apple-system, sans-serif;
+            padding: 2rem;
+            margin: 0;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        .header {
+            background: linear-gradient(135deg, #1a2a3a, #0f1a24);
+            color: white;
+            padding: 1.5rem 2rem;
+            border-radius: 1rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+        }
+        .header h1 {
+            margin: 0 0 0.5rem 0;
+            font-size: 1.8rem;
+        }
+        .header p {
+            margin: 0;
+            opacity: 0.8;
+            font-size: 0.9rem;
+        }
+        .toolbar {
+            background: white;
+            padding: 1rem 1.5rem;
+            border-radius: 0.75rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            align-items: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        .toolbar label {
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: #334155;
+        }
+        select, input {
+            padding: 0.4rem 0.8rem;
+            border-radius: 0.5rem;
+            border: 1px solid #cbd5e1;
+            background: white;
+            font-size: 0.85rem;
+        }
+        button {
+            background: #1e3a5f;
+            color: white;
+            border: none;
+            padding: 0.4rem 1rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-weight: 500;
+            transition: 0.2s;
+        }
+        button:hover {
+            background: #0f2b48;
+        }
+        .stats {
+            display: flex;
+            gap: 1rem;
+            margin-left: auto;
+            font-size: 0.8rem;
+            color: #475569;
+        }
+        .gold_grad {
+        	overflow: hidden;
+        	background-image: linear-gradient(to right, #dfcc39ab, #cfa80ffc) !important;
+        }
+
+        .unique {
+        	overflow: hidden;
+        	background-image: linear-gradient(to right, #89eec3, #ff67f6) !important;
+        }
+
+        .uni_gold {
+        	overflow: hidden;
+        	background-image: linear-gradient(to right, #dbff5c, #c167ff) !important;
+        }
+
+        .dbf {
+        	background: #9300a91f !important;
+        }
+
+        .skill-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(480px, 1fr));
+            gap: 1.25rem;
+        }
+        .skill-card {
+            background: white;
+            border-radius: 1rem;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            transition: transform 0.1s ease;
+            border: 1px solid #e2e8f0;
+        }
+        .skill-card:hover {
+            box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+        }
+        .skill-name {
+            background: inherit;
+            padding: 1rem 1.25rem;
+            font-weight: 700;
+            font-size: 1.3rem;
+            border-bottom: 2px solid darkcyan;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+        .skill-name-en {
+            color: #0f172a;
+        }
+        .skill-badge {
+            background: #eef2ff;
+            color: #1e3a8a;
+            font-size: 0.8rem;
+            padding: 0.2rem 0.6rem;
+            border-radius: 30px;
+            font-weight: 500;
+        }
+        .condition-group {
+            padding: 1rem 1.25rem;
+            border-bottom: 1px solid #f0f2f5;
+        }
+        .condition-group:last-child {
+            border-bottom: none;
+        }
+        .group-header {
+            font-weight: 600;
+            color: #2c3e66;
+            background: #f1f5f9;
+            display: inline-block;
+            padding: 0.2rem 0.7rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            margin-bottom: 0.75rem;
+        }
+        .info-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-bottom: 0.75rem;
+            font-size: 1rem;
+            background: #fafcff;
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.6rem;
+        }
+        .info-label {
+            font-weight: 700;
+            color: #475569;
+            min-width: 90px;
+        }
+        .info-value {
+            color: #1e293b;
+            font-family: monospace;
+            font-size: 1rem;
+        }
+        .effect-item {
+            background: #fefce8;
+            margin: 0.5rem 0;
+            padding: 0.6rem 0.75rem;
+            border-radius: 0.6rem;
+            border-left: 4px solid;
+            font-size: 1rem;
+        }
+        .effect-type-green { border-left-color: #10b981; background: #ecfdf5; }
+        .effect-type-yellow { border-left-color: #e19827; background: #ecfdf5;}
+        .effect-target {
+            font-family: monospace;
+            background: #eef2ff;
+            padding: 0.15rem 0.4rem;
+            border-radius: 0.3rem;
+            font-size: 0.7rem;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 4rem;
+            color: #64748b;
+            background: white;
+            border-radius: 1rem;
+        }
+        .time-badge {
+            background: #e2e8f0;
+            border-radius: 20px;
+            padding: 0.15rem 0.5rem;
+            font-size: 1rem;
+            font-family: monospace;
+            font-weight: 700;
+        }
+        footer {
+            text-align: center;
+            margin-top: 2rem;
+            color: #94a3b8;
+            font-size: 0.75rem;
+        }
+        @media (max-width: 700px) {
+            body { padding: 1rem; }
+            .skill-grid { grid-template-columns: 1fr; }
+        }
+    </style> 
+    <script src="skill.js"></script>
+    <script>
+    	window.skillData = (typeof skillData !== 'undefined') ? skillData : null;
+    </script>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>📊 Skill Effect Viewer</h1>
+        <p>Native parser for Umamusume skill data — automatic display with type identifiers</p>
+    </div>
+
+    <div class="toolbar">
+        <label>🔍 Display mode:</label>
+        <select id="displayMode">
+            <option value="full">Full Details</option>
+            <option value="compact">Compact (hide raw numbers)</option>
+            <option value="debug">Debug (show raw values)</option>
+        </select>
+        <label>🎨 Effect type highlight:</label>
+        <select id="typeHighlight">
+        </select>
+        <button id="refreshBtn">⟳ Refresh Viewer</button>
+        <div class="stats" id="statsDisplay">0 skills loaded</div>
+    </div>
+
+    <div id="skillContainer" class="skill-grid">
+        <div class="empty-state">Loading skill data... or no data available</div>
+    </div>
+    <footer>
+        ⚡ base_time: -1=Infinite, 0=Permanent, n=time/1e4 seconds | cd: cooldown/1e4 | value: /1e4<br>
+        🔧 Use the effect array in the script to customize data.
+    </footer>
+    <p style="text-align: center; margin: 2em;">
+    	<a href="uma2.html" download="uma2.html" style="opacity: 70%;">Download</a>
+    </p>
+</div>
+
+<!-- <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script> -->
+
+<script>
+    // ======================== CUSTOMIZABLE WRAPPER FUNCTION ========================
+    /**
+     * Skill Viewer - Main rendering engine
+     * @param {Array} effectArray - Array of skill objects
+     * @param {Object} options - display options
+     * @param {Function} typeIdentifier - optional custom type label generator (type => string)
+     * @returns {string} HTML string
+     */
+
+	const typeMap = {
+		1: ["Speed Stat Up", "Speed Stat Down"],
+		2: ["Stamina Stat Up", "Stamina Stat Down"],
+		3: ["Power Stat Up", "Power Stat Down"],
+		4: ["Guts Stat Up", "Guts Stat Down"],
+		5: ["Wits Stat Up", "Wits Stat Down"],
+		6: "Change Strategy (Runaway)",
+		8: "Field of View Decrease",
+        9: ["Stamina Recovery", "Stamina Drain"],
+        10: "Improve Start Reaction",
+        13: "Frenzied",
+        14: "Add Start Delay",
+        21: "Decrease Current Speed",
+        22: "Increase Current Speed",
+		27: "Increase Target Speed",
+		28: "Increase Lane Movement Speed",
+		29: "Decrease Rush Chance",
+		31: ["Acceleration Increase", "Acceleration Decrease"],
+		35: "Change Lane (After % Track)",
+		501: "All Stat Increase During Festival",
+		502: "All Stat Increase During Festival",
+		503: "Mood Maxed During Carnival"
+    };
+
+    const ignoreList = [1, 2, 3, 4, 5, 10, 13, 14]
+    const timeList = [13, 14]
+    const percentList = [29, 35]
+
+    const targetData = {
+    	4: "Within Field Of View",
+    	9: "Ahead of you",
+    	10: "Behind of you",
+    	18: "All Targetted Runner",
+    	19: "Ahead of You",
+    	20: "Behind of You",
+    	21: "Frenzied Runner (Rush Time)",
+    	22: "Silence Suzuka"
+    }
+
+    const effTDData = { // DETAIL
+    	1: "Front Runners",
+    	2: "Pace Chasers",
+    	3: "Late Surgers",
+    	4: "End Closers",
+    	5: "5 Closest Girls",
+    	10: "Rushing Enemy",
+    	18: "All Enemy Girls",
+    	1002: "Silence Suzuka",
+	}
+
+	const reversedMap = {}
+
+	for (const [id, value] of Object.entries(typeMap)) {
+	    let transformedKey;
+	    if (Array.isArray(value)) {
+	        const firstItem = value[0];
+	        transformedKey = firstItem.split(' ')[0].toLowerCase();
+	    } else {
+	        transformedKey = value.toLowerCase().replace(/ /g, '_');
+	    }
+	    reversedMap[transformedKey] = parseInt(id, 10);
+	}
+
+	const fn = (_) => Array.isArray(typeMap[_]) ? typeMap[_][0].split(" ")[0] : typeMap[_];
+
+    const checkType = (b) => reversedMap[b.toLowerCase()];
+    
+    const selector = document.getElementById("typeHighlight")
+
+    selector.appendChild(new Option("All Types", "all"))
+
+    Object.entries(reversedMap).forEach(([s,_]) => selector.appendChild(new Option(fn(_), s)))
+
+
+    function renderSkillViewer(effectArray, options = {}, typeIdentifier = null) {
+        const mergedOptions = {
+            mode: 'full',       // 'full', 'compact', 'debug'
+            highlightType: 'all', // 'all', '9', 'other'
+            showEmptyGroups: false,
+            ...options
+        };
+
+        if (!effectArray || effectArray.length === 0) {
+            return `<div class="empty-state">✨ No skill data available. Add entries to the 'effect' array.</div>`;
+        }
+
+        // Default type label mapper (you can override)
+        const defaultTypeLabel = (typeNum, typeVal = 1) => {
+        	const h = typeVal > 0 ? 0 : 1;
+
+        	// console.log(arguments)
+
+        	if(Array.isArray(typeMap[typeNum])) {
+        		return typeMap[typeNum][h]
+        	}
+        	else {
+            	return typeMap[typeNum] || `Type ${typeNum}`;
+        	}
+
+        };
+
+        const targetLabel = (num, val = 1) => {
+        	const h = val > 0 ? 0 : 1;
+        	const n = targetData
+
+        	// console.log(arguments)
+
+        	if(Array.isArray(n[num])) {
+        		return n[num][h]
+        	}
+        	else {
+            	return n[num] || `Type ${num}`;
+        	}
+
+        };
+
+        const effTDLabel = (num, val = 1) => {
+        	const h = val > 0 ? 0 : 1;
+        	const n = effTDData
+
+        	// console.log(arguments)
+
+        	if(Array.isArray(n[num])) {
+        		return n[num][h]
+        	}
+        	else {
+            	return n[num] || `Type ${num}`;
+        	}
+
+        };        
+
+        // Helper to format time (base_time)
+        const formatTime = (baseTime) => {
+            if (baseTime === -1) return '<span class="time-badge">Infinite</span>';
+            if (baseTime === 0) return '<span class="time-badge">Instant Effect</span>';
+            const seconds = (baseTime / 10000).toFixed(2);
+            return `<span class="time-badge">⏱️ ${seconds}s</span>`;
+        };
+
+        const formatCD = (cd) => {
+            if (!cd && cd !== 0) return '—';
+            const sec = (cd / 10000).toFixed(2);
+            return `${sec}s`;
+        };
+
+        const formatValue = (val, mode) => {
+            if (val === undefined || val === null) return '—';
+            const num = typeof val === 'number' ? val : parseFloat(val);
+            if (isNaN(num)) return val;
+            const actual = num / 10000;
+            if (mode === 'debug') return `${num} (${actual})`;
+            if (mode === 'compact') return actual.toFixed(2);
+            return actual //.toFixed(2);
+        };
+
+        // console.log(mergedOptions.highlightType)
+
+        let filteredArray = effectArray;
+
+        if (mergedOptions.highlightType !== 'all') {
+
+        	mergedOptions.highlightType = checkType(mergedOptions.highlightType);
+
+        	// console.log(mergedOptions.highlightType)
+            filteredArray = effectArray.filter(skill => {
+                const groups = skill.condition_groups || [];
+                return groups
+                	.some(g => (g.effects || [])
+                	.some(e => e.type === Number(mergedOptions.highlightType)))
+            });
+        }
+
+        if (filteredArray.length === 0) {
+            return `<div class="empty-state">⚠️ No skills match the selected type filter.</div>`;
+        }
+
+        let cardsHtml = '';
+        for (let idx = 0; idx < filteredArray.length; idx++) {
+            const skill = filteredArray[idx];
+            const nameEn = skill.name_en || skill.enname || `Skill_${idx}`;
+            const groups = skill.condition_groups || [];
+            const rare = skill.rarity || 1;
+
+
+            function checkRare(t) {
+            	const rpx = {
+            		1: "",
+            		2: "gold_grad", // Gold
+            		3: "unique", // Unique
+            		4: "uni_gold", // Unique Gold
+            		5: "uni_gold", // Unique Gold
+            	}
+
+            	return rpx[Number(t)] || ""
+            }
+
+            const rarity = {
+            	2: "Gold Skill",
+            	3: "Unique Skill",
+            	4: "Gold Unqiue Skill",
+            	5: "Gold Unqiue Skill"
+            }
+
+            let bannerType = checkRare(rare)
+
+            let groupsHtml = '';
+            for (let gIdx = 0; gIdx < groups.length; gIdx++) {
+                const group = groups[gIdx];
+                const baseTime = group.base_time;
+                const cd = group.cd;
+                const effects = group.effects || [];
+                
+                // effect entries
+                let effectsHtml = '';
+                for (let eIdx = 0; eIdx < effects.length; eIdx++) {
+                    const eff = effects[eIdx];
+                    const effType = eff.type;
+                    const effValue = eff.value;
+                    const effTarget = eff.target;
+                    const effTD = eff.target_details;
+
+                    const typeLabel = defaultTypeLabel(effType, effValue);
+                    const effectClass = (effValue > 0) ? 'effect-type-green' : 'effect-type-red';
+                    
+                    let valueStr = formatValue(effValue, mergedOptions.mode)
+
+                    valueStr = `${valueStr}${
+                    	(ignoreList.includes(effType)) ? "" : ` (${(100 * valueStr).toFixed(1)}%)`
+                    }`;
+
+                    valueStr = `${valueStr}${
+                    	(timeList.includes(effType)) ? "s" : ""
+                    }`;
+
+                    valueStr = `${valueStr}${
+                    	(percentList.includes(effType)) ? "%" : ""
+                    }`;
+
+                    let targetStr = (effTarget !== undefined && effTarget !== null) ? `<strong>Target:</strong> ${targetLabel(effTarget)}` : '';
+                    let detail = (effTD !== undefined && effTD !== null) ? `<strong>Detail:</strong> ${effTDLabel(effTD)}` : '';
+
+                    if(effValue < 0) {
+                    	bannerType = "dbf"
+                    }
+                    
+                    effectsHtml += `
+                        <div class="effect-item ${effectClass}">
+                            <div><strong>${typeLabel}</strong></div>
+                            <div class="d-flex" style="display:flex; gap:1rem; flex-wrap:wrap; margin-top:0.25rem;">
+                                <span><strong>📊 Value: </strong> <code>${valueStr}</code></span>
+                                ${targetStr ? `<span>🎯 ${targetStr}</span>` : ''}
+                                ${targetStr ? `<span>🎯 ${detail}</span>` : ''}
+                                ${mergedOptions.mode === 'debug' ? `<span>🔧 raw type: ${effType}</span>` : ''}
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                groupsHtml += `
+                    <div class="condition-group">
+                        <div class="group-header">⚙️ Condition Group ${gIdx+1}</div>
+                        <div class="info-row">
+                            <span class="info-label">⏲️ Base Duration:</span>
+                            <span class="info-value">${formatTime(baseTime)}</span>
+                			${!cd ? "" : `<span class="info-label">⏳ Cooldown:</span>
+                            <span class="info-value">${formatCD(cd)}</span>`}
+                        </div>
+                        ${effectsHtml || '<div class="small text-muted" style="padding:0.4rem;">No effects in this group</div>'}
+                    </div>
+                `;
+            }
+
+            
+            cardsHtml += `
+                <div class="skill-card ${bannerType}" data-skill-idx="${idx}">
+                    <div class="skill-name">
+                        <span class="skill-name-en">📖 ${escapeHtml(nameEn)}</span>
+                        <span class="skill-badge">${rarity[rare] || "Normal Skill"}</span>
+                    </div>
+                    ${groupsHtml || '<div class="condition-group"><div class="small text-muted p-3">No condition groups defined</div></div>'}
+                </div>
+            `;
+        }
+        
+        // update stats
+        setTimeout(() => {
+            const statsDiv = document.getElementById('statsDisplay');
+            if (statsDiv) statsDiv.innerHTML = `📚 ${filteredArray.length} / ${effectArray.length} skills displayed`;
+        }, 0);
+        
+        return cardsHtml;
+    }
+    
+    // simple escape helper
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        });
+    }
+
+    async function loadSkills() {
+	    const xhr = new XMLHttpRequest();
+		xhr.open('GET', 'https://gametora.com/data/umamusume/skills.09c64d6a.json', false); // false = sync
+		xhr.send();
+
+		if (xhr.status === 200) {
+	        const freshData = JSON.parse(xhr.responseText);
+	        if (freshData && freshData.length) {
+	            localStorage.setItem('uma_skills', JSON.stringify(freshData));
+	        }
+	    }
+    	console.log("Using GameTora Skill List")
+	}
+    
+    // ======================== DEMO DATA ARRAY (EFFECT) ========================
+
+    let skill;
+
+    if(window.skillData) {
+    	skill = window.skillData
+    	console.log("Using Local Skill List")
+    } else {
+    	loadSkills()
+    	skill = JSON.parse(localStorage.getItem("uma_skills"))
+    }
+
+    const p = skill.filter(x => x.name_en != null)
+
+    const effect = p || [
+        {
+            name_en: "Swinging Maestro (Gold Recovery)",
+            condition_groups: [
+                {
+                    base_time: 85000,   // 8.5 seconds
+                    cd: 30000,          // 3 sec cd
+                    effects: [
+                        { type: 9, value: 55000, target: 1 }   // stamina recovery +5.5
+                    ]
+                }
+            ]
+        },
+        {
+            name_en: "Cooldown - Straight Recovery",
+            condition_groups: [
+                {
+                    base_time: 0,       // permanent effect on straight
+                    cd: 0,
+                    effects: [
+                        { type: 9, value: 38000, target: 1 }
+                    ]
+                }
+            ]
+        },
+        {
+            name_en: "Shadow Break (Overtaking Boost)",
+            condition_groups: [
+                {
+                    base_time: 0,
+                    cd: 40000,          // 4 sec
+                    effects: [
+                        { type: 3, value: 25000, target: 0 }   // velocity increase
+                    ]
+                },
+                {
+                    base_time: 120000,
+                    cd: 0,
+                    effects: [
+                        { type: 2, value: 18000, target: 0 }    // acceleration
+                    ]
+                }
+            ]
+        },
+        {
+            name_en: "Extra Tank (Stamina Reserve)",
+            condition_groups: [
+                {
+                    base_time: -1,      // infinite duration when exhausted
+                    cd: 60000,
+                    effects: [
+                        { type: 9, value: 70000, target: 1 }    // large stamina recovery
+                    ]
+                }
+            ]
+        },
+        {
+            name_en: "Nemesis (Final Corner Overtake)",
+            condition_groups: [
+                {
+                    base_time: 45000,
+                    cd: 0,
+                    effects: [
+                        { type: 3, value: 32000, target: 0 }
+                    ]
+                }
+            ]
+        },
+        {
+            name_en: "Drain Stamina - Debuff Example",
+            condition_groups: [
+                {
+                    base_time: 90000,
+                    cd: 50000,
+                    effects: [
+                        { type: 10, value: -30000, target: 2 }   // stamina drain from opponent
+                    ]
+                }
+            ]
+        }
+    ];
+
+
+    let currentCount = effect.length
+    
+    // ======================== UI INTERACTION ========================
+    let currentOptions = {
+        mode: 'full',
+        highlightType: 'all'
+    };
+    
+    function updateViewer() {
+        const mode = document.getElementById('displayMode').value;
+        const highlight = document.getElementById('typeHighlight').value;
+       
+        currentOptions = {
+            mode: mode,
+            highlightType: highlight,
+            showEmptyGroups: true
+        };
+        
+        // Example of custom type identifier (optional, can be changed)
+       
+        const html = renderSkillViewer(effect, currentOptions);
+        const container = document.getElementById('skillContainer');
+        if (container) container.innerHTML = html;
+        
+        // update stats summary
+        const statsSpan = document.getElementById('statsDisplay');
+        if (statsSpan) {
+            let filteredCount = effect.length;
+            if (highlight !== 'all') {
+            	filteredCount = currentCount
+            }
+            statsSpan.innerHTML = `📊 ${filteredCount} / ${effect.length} skills | mode: ${mode}`;
+        }
+    }
+    
+    // init event listener + manual refresh
+    document.getElementById('refreshBtn').addEventListener('click', updateViewer);
+    document.getElementById('displayMode').addEventListener('change', updateViewer);
+    document.getElementById('typeHighlight').addEventListener('change', updateViewer);
+    
+    // initial render
+    updateViewer();
+</script>
+</body>
+</html>
