@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Skill Effect Viewer - Custom URL Loader</title>
+    <title>Skill Effect Viewer - Hybrid Loader w/ Fuzzy Search</title>
     <style>
         * {
             box-sizing: border-box;
@@ -13,6 +13,10 @@
             font-family: 'Segoe UI', Roboto, system-ui, -apple-system, sans-serif;
             padding: 2rem;
             margin: 0;
+            transition: background 0.3s ease, color 0.2s ease;
+        }
+        body.dark-mode {
+            background: #0f172a;
         }
         .container {
             max-width: 1400px;
@@ -25,15 +29,10 @@
             border-radius: 1rem;
             margin-bottom: 2rem;
             box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+            transition: background 0.3s ease;
         }
-        .header h1 {
-            margin: 0 0 0.5rem 0;
-            font-size: 1.8rem;
-        }
-        .header p {
-            margin: 0;
-            opacity: 0.8;
-            font-size: 0.9rem;
+        body.dark-mode .header {
+            background: linear-gradient(135deg, #0f172a, #020617);
         }
         .toolbar {
             background: white;
@@ -45,12 +44,20 @@
             flex-wrap: wrap;
             align-items: center;
             box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-            position: relative;
+            transition: background 0.3s ease, box-shadow 0.3s ease;
+        }
+        body.dark-mode .toolbar {
+            background: #1e293b;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
         }
         .toolbar label {
             font-weight: 600;
             font-size: 0.85rem;
             color: #334155;
+            transition: color 0.3s ease;
+        }
+        body.dark-mode .toolbar label {
+            color: #cbd5e1;
         }
         select, input {
             padding: 0.4rem 0.8rem;
@@ -58,6 +65,43 @@
             border: 1px solid #cbd5e1;
             background: white;
             font-size: 0.85rem;
+            transition: background 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+        }
+        body.dark-mode select, body.dark-mode input {
+            background: #0f172a;
+            border-color: #334155;
+            color: #e2e8f0;
+        }
+        .search-wrapper {
+            position: relative;
+            display: inline-block;
+            min-width: 220px;
+        }
+        .search-wrapper input {
+            width: 100%;
+            padding-right: 28px;
+        }
+        .search-clear {
+            position: absolute;
+            right: 6px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #94a3b8;
+            font-size: 1rem;
+            font-weight: bold;
+            background: none;
+            border: none;
+            padding: 0 4px;
+        }
+        .search-clear:hover {
+            color: #475569;
+        }
+        body.dark-mode .search-clear {
+            color: #64748b;
+        }
+        body.dark-mode .search-clear:hover {
+            color: #94a3b8;
         }
         button {
             background: #1e3a5f;
@@ -72,28 +116,73 @@
         button:hover {
             background: #0f2b48;
         }
+        body.dark-mode button {
+            background: #2d3a5f;
+        }
+        body.dark-mode button:hover {
+            background: #1e2c4a;
+        }
         .stats {
             display: flex;
             gap: 1rem;
             margin-left: auto;
             font-size: 0.8rem;
             color: #475569;
+            align-items: center;
+            transition: color 0.3s ease;
         }
+        body.dark-mode .stats {
+            color: #94a3b8;
+        }
+        
+
+        /* Simpler faded neon gradients without animation */
         .gold_grad {
             overflow: hidden;
-            background-image: linear-gradient(to right, #dfcc39ab, #cfa80ffc) !important;
+            background-image: linear-gradient(135deg, rgba(218, 165, 32, 0.12), rgba(255, 215, 0, 0.06)) !important;
+            border-left: 2px solid rgba(218, 165, 32, 0.3);
         }
+        
         .unique {
             overflow: hidden;
-            background-image: linear-gradient(to right, #89eec3, #ff67f6) !important;
+            background-image: linear-gradient(135deg, rgba(137, 238, 195, 0.1), rgba(255, 103, 246, 0.06)) !important;
+            border-left: 2px solid rgba(137, 238, 195, 0.3);
         }
+        
         .uni_gold {
             overflow: hidden;
-            background-image: linear-gradient(to right, #dbff5c, #c167ff) !important;
+            background-image: linear-gradient(135deg, rgba(219, 255, 92, 0.1), rgba(193, 103, 255, 0.06)) !important;
+            border-left: 2px solid rgba(193, 103, 255, 0.3);
         }
+        
         .dbf {
-            background: #9300a91f !important;
+            background: rgba(147, 0, 169, 0.06) !important;
+            border-left: 2px solid rgba(147, 0, 169, 0.3);
         }
+        
+        /* Light mode originals */
+        body:not(.dark-mode) .gold_grad {
+            background-image: linear-gradient(to right, #dfcc39ab, #cfa80ffc) !important;
+            border-left: none;
+        }
+        
+        body:not(.dark-mode) .unique {
+            background-image: linear-gradient(to right, #89eec3, #ff67f6) !important;
+            border-left: none;
+        }
+        
+        body:not(.dark-mode) .uni_gold {
+            background-image: linear-gradient(to right, #dbff5c, #c167ff) !important;
+            border-left: none;
+        }
+        
+        body:not(.dark-mode) .dbf {
+            background: #9300a91f !important;
+            border-left: none;
+        }
+
+
+
         .skill-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(480px, 1fr));
@@ -104,11 +193,19 @@
             border-radius: 1rem;
             overflow: hidden;
             box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-            transition: transform 0.1s ease;
+            transition: transform 0.1s ease, background 0.3s ease, box-shadow 0.3s ease;
             border: 1px solid #e2e8f0;
+        }
+        body.dark-mode .skill-card {
+            background: #1e293b;
+            border-color: #334155;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
         }
         .skill-card:hover {
             box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+        }
+        body.dark-mode .skill-card:hover {
+            box-shadow: 0 8px 20px rgba(0,0,0,0.4);
         }
         .skill-name {
             background: inherit;
@@ -124,6 +221,11 @@
         }
         .skill-name-en {
             color: #0f172a;
+            word-break: break-word;
+            transition: color 0.3s ease;
+        }
+        body.dark-mode .skill-name-en {
+            color: #f1f5f9;
         }
         .skill-badge {
             background: #eef2ff;
@@ -132,10 +234,19 @@
             padding: 0.2rem 0.6rem;
             border-radius: 30px;
             font-weight: 500;
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+        body.dark-mode .skill-badge {
+            background: #2d3a5f;
+            color: #93c5fd;
         }
         .condition-group {
             padding: 1rem 1.25rem;
             border-bottom: 1px solid #f0f2f5;
+            transition: border-color 0.3s ease;
+        }
+        body.dark-mode .condition-group {
+            border-bottom-color: #334155;
         }
         .condition-group:last-child {
             border-bottom: none;
@@ -149,6 +260,11 @@
             border-radius: 20px;
             font-size: 0.8rem;
             margin-bottom: 0.75rem;
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+        body.dark-mode .group-header {
+            background: #0f172a;
+            color: #a5b4fc;
         }
         .info-row {
             display: flex;
@@ -159,16 +275,28 @@
             background: #fafcff;
             padding: 0.5rem 0.75rem;
             border-radius: 0.6rem;
+            transition: background 0.3s ease;
+        }
+        body.dark-mode .info-row {
+            background: #0f172a;
         }
         .info-label {
             font-weight: 700;
             color: #475569;
             min-width: 90px;
+            transition: color 0.3s ease;
+        }
+        body.dark-mode .info-label {
+            color: #94a3b8;
         }
         .info-value {
             color: #1e293b;
             font-family: monospace;
             font-size: 1rem;
+            transition: color 0.3s ease;
+        }
+        body.dark-mode .info-value {
+            color: #cbd5e1;
         }
         .effect-item {
             background: #fefce8;
@@ -177,22 +305,28 @@
             border-radius: 0.6rem;
             border-left: 4px solid;
             font-size: 1rem;
+            transition: background 0.3s ease;
+        }
+
+        body.dark-mode .effect-item {
+            background: #2d2a1e;
+            color: blanchedalmond;
         }
         .effect-type-green { border-left-color: #10b981; background: #ecfdf5; }
         .effect-type-yellow { border-left-color: #e19827; background: #ecfdf5;}
-        .effect-target {
-            font-family: monospace;
-            background: #eef2ff;
-            padding: 0.15rem 0.4rem;
-            border-radius: 0.3rem;
-            font-size: 0.7rem;
-        }
+        body.dark-mode .effect-type-green { background: #064e3b; border-left-color: #34d399; }
+        body.dark-mode .effect-type-yellow { background: #78350f; border-left-color: #fbbf24; }
         .empty-state {
             text-align: center;
             padding: 4rem;
             color: #64748b;
             background: white;
             border-radius: 1rem;
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+        body.dark-mode .empty-state {
+            background: #1e293b;
+            color: #94a3b8;
         }
         .time-badge {
             background: #e2e8f0;
@@ -201,14 +335,22 @@
             font-size: 1rem;
             font-family: monospace;
             font-weight: 700;
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+        body.dark-mode .time-badge {
+            background: #334155;
+            color: #e2e8f0;
         }
         footer {
             text-align: center;
             margin-top: 2rem;
             color: #94a3b8;
             font-size: 0.75rem;
+            transition: color 0.3s ease;
         }
-        /* URL Dropdown & Popout Styles */
+        body.dark-mode footer {
+            color: #64748b;
+        }
         .url-dropdown {
             position: relative;
             display: inline-block;
@@ -250,6 +392,10 @@
             box-shadow: 0 20px 35px rgba(0,0,0,0.3);
             overflow: hidden;
             animation: slideUp 0.2s ease;
+            transition: background 0.3s ease;
+        }
+        body.dark-mode .popout-card {
+            background: #1e293b;
         }
         @keyframes slideUp {
             from {
@@ -268,6 +414,10 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            transition: background 0.3s ease;
+        }
+        body.dark-mode .popout-header {
+            background: #0f172a;
         }
         .popout-header h3 {
             margin: 0;
@@ -289,6 +439,10 @@
         .popout-body {
             padding: 1.5rem;
             color: #1e293b;
+            transition: color 0.3s ease;
+        }
+        body.dark-mode .popout-body {
+            color: #e2e8f0;
         }
         .popout-body label {
             font-weight: 600;
@@ -310,6 +464,11 @@
             border-radius: 0.5rem;
             margin-top: 0.5rem;
             background: #f1f5f9;
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+        body.dark-mode .url-status {
+            background: #0f172a;
+            color: #cbd5e1;
         }
         .popout-actions {
             display: flex;
@@ -342,68 +501,71 @@
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
-        .current-url-badge {
-            background: #eef2ff;
-            border-radius: 20px;
-            padding: 0.2rem 0.6rem;
-            font-size: 0.7rem;
-            font-family: monospace;
-            color: #1e3a8a;
-            margin-left: 0.5rem;
-            max-width: 200px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            display: inline-block;
-            vertical-align: middle;
+        .search-highlight {
+            background-color: #fef08a;
+            border-radius: 2px;
+            padding: 0 2px;
+            font-weight: bold;
+        }
+        body.dark-mode .search-highlight {
+            background-color: #854d0e;
+            color: #fef08a;
         }
         @media (max-width: 700px) {
             body { padding: 1rem; }
             .skill-grid { grid-template-columns: 1fr; }
+            .toolbar { flex-direction: column; align-items: stretch; }
+            .stats { margin-left: 0; justify-content: space-between; }
+            .search-wrapper { width: 100%; }
         }
     </style>
+	<script src="skill.js"></script>
     <script>
-        // initial placeholder for skillData (will be overwritten by async load)
-        window.skillData = null;
+    	window.skillData = (typeof skillData !== 'undefined') ? skillData : null;
     </script>
 </head>
 <body>
 <div class="container">
     <div class="header">
-        <h1>📊 Skill Effect Viewer</h1>
-        <p>Native parser for Umamusume skill data — dynamic URL loader with custom endpoint</p>
+        <h1>📊 Skill Effect Viewer — Fuzzy Search + Hybrid Loader</h1>
+        <p>🔍 Fuzzy search by skill name | Priority: window.skillData → Custom URL → Default</p>
     </div>
 
     <div class="toolbar">
+        <div class="search-wrapper">
+            <input type="text" id="skillSearch" placeholder="🔍 Fuzzy search skill name..." autocomplete="off">
+            <button class="search-clear" id="clearSearchBtn" style="display: none;">✖</button>
+        </div>
         <label>🔍 Display mode:</label>
         <select id="displayMode">
             <option value="full">Full Details</option>
             <option value="compact">Compact (hide raw numbers)</option>
             <option value="debug">Debug (show raw values)</option>
         </select>
-        <label>🎨 Effect type highlight:</label>
+        <label>🎨 Effect type:</label>
         <select id="typeHighlight">
         </select>
+
+        <button id="darkModeToggle" style="background: #4a5568;">🌙 Dark/Light</button>
         
-        <!-- Custom dropdown with popout for URL override -->
         <div class="url-dropdown">
             <button id="urlSettingsBtn" class="url-dropdown-btn">🌐 Data Source ▼</button>
         </div>
         
-        <button id="refreshBtn">⟳ Refresh Viewer</button>
+        <button id="refreshBtn">⟳ Refresh</button>
         <div class="stats" id="statsDisplay">0 skills loaded</div>
     </div>
 
     <div id="skillContainer" class="skill-grid">
-        <div class="empty-state">Loading skill data... or no data available</div>
+        <div class="empty-state">Initializing skill data...</div>
     </div>
     <footer>
-        ⚡ base_time: -1=Infinite, 0=Permanent, n=time/1e4 seconds | cd: cooldown/1e4 | value: /1e4<br>
-        🔧 Use the "Data Source" button to input a custom JSON URL (must match skill array format).<br>
-        💾 Default URL: https://gametora.com/data/umamusume/skills.528f3ead.json
+        ⚡ <strong>Fuzzy search</strong>: matches skill names (case-insensitive, typo-tolerant).<br>
+        🔄 Fallback chain: window.skillData (embedded) → custom URL → default GameTora URL.<br>
+        💡 Default remote: https://gametora.com/data/umamusume/skills.528f3ead.json
     </footer>
     <p style="text-align: center; margin: 2em;">
-        <a href="uma2.html" download="uma2.html" style="opacity: 70%;">Download</a>
+        <a href="uma2.html" download="uma2.html" style="opacity: 70%;">📎 Download this page</a>
     </p>
 </div>
 
@@ -411,31 +573,102 @@
 <div id="urlPopoutOverlay" class="popout-overlay">
     <div class="popout-card">
         <div class="popout-header">
-            <h3>🔗 Override Skill Data URL</h3>
+            <h3>🔗 Override Remote Skill Data URL</h3>
             <button class="close-popout" id="closePopoutBtn">&times;</button>
         </div>
         <div class="popout-body">
             <label>Enter JSON endpoint URL:</label>
             <input type="text" id="customUrlInput" placeholder="https://example.com/skills.json" value="https://gametora.com/data/umamusume/skills.528f3ead.json">
             <div class="url-status" id="urlStatusMsg">
-                💡 Default URL: GameTora skill list
+                💡 URL for remote fetch (if no local skillData)
             </div>
             <div class="popout-actions">
                 <button id="cancelUrlBtn" class="btn-secondary">Cancel</button>
-                <button id="applyUrlBtn" class="btn-primary">Load & Apply</button>
+                <button id="applyUrlBtn" class="btn-primary">Load & Apply Remote</button>
             </div>
         </div>
     </div>
 </div>
 
 <script>
+    // ======================== FUZZY SEARCH IMPLEMENTATION ========================
+    // Simple but effective fuzzy scoring (Levenshtein-based + substring bonus)
+    function fuzzyMatchScore(query, text) {
+        if (!query || query.length === 0) return 1.0;
+        if (!text) return 0;
+        
+        const q = query.toLowerCase().trim();
+        const t = text.toLowerCase();
+        
+        // Exact substring match gets high score
+        if (t.includes(q)) {
+            // shorter text with exact match gets better score
+            return 1.0 - (Math.min(1, (t.length - q.length) / 100) * 0.3);
+        }
+        
+        // Calculate simple Levenshtein distance for fuzzy matching
+        function levenshtein(a, b) {
+            const matrix = [];
+            for (let i = 0; i <= b.length; i++) matrix[i] = [i];
+            for (let j = 0; j <= a.length; j++) matrix[0][j] = j;
+            for (let i = 1; i <= b.length; i++) {
+                for (let j = 1; j <= a.length; j++) {
+                    const cost = a[j-1] === b[i-1] ? 0 : 1;
+                    matrix[i][j] = Math.min(
+                        matrix[i-1][j] + 1,
+                        matrix[i][j-1] + 1,
+                        matrix[i-1][j-1] + cost
+                    );
+                }
+            }
+            return matrix[b.length][a.length];
+        }
+        
+        const maxLen = Math.max(q.length, t.length);
+        if (maxLen === 0) return 0;
+        const distance = levenshtein(q, t);
+        const similarity = 1 - (distance / maxLen);
+        
+        // Additional bonus for matching first letters or word boundaries
+        let wordBonus = 0;
+        const qWords = q.split(/[\s\-_]+/);
+        const tWords = t.split(/[\s\-_]+/);
+        for (const qWord of qWords) {
+            if (qWord.length >= 2) {
+                for (const tWord of tWords) {
+                    if (tWord.startsWith(qWord)) wordBonus += 0.15;
+                    else if (tWord.includes(qWord)) wordBonus += 0.08;
+                }
+            }
+        }
+        
+        return Math.min(1.0, similarity + wordBonus);
+    }
+    
+    // Filter skills by fuzzy search on name_en or enname
+    function filterSkillsByFuzzySearch(skills, searchTerm) {
+        if (!searchTerm || searchTerm.trim().length === 0) return skills;
+        const term = searchTerm.trim();
+        const scored = skills.map(skill => {
+            const name = (skill.name_en || skill.enname || '').toLowerCase();
+            const score = fuzzyMatchScore(term, name);
+            return { skill, score };
+        });
+        const filtered = scored.filter(item => item.score > 0.25); // threshold 0.25
+        filtered.sort((a, b) => b.score - a.score);
+        return filtered.map(item => item.skill);
+    }
+    
     // ======================== GLOBALS ========================
-    let currentSkillArray = [];      // holds the current skill data (filtered or full)
-    let originalRawSkills = [];       // raw unfiltered from last fetch
+    let currentSkillArray = [];      // full unfiltered master list (original loaded data)
+    let filteredSkillArray = [];      // after fuzzy search + type filter
+    let originalRawSkills = [];
     let currentActiveUrl = "https://gametora.com/data/umamusume/skills.528f3ead.json";
     let isLoading = false;
+    let usingLocalFallback = false;
+    let currentSearchTerm = "";
     
-    // Type mapping & helpers (identical to original logic)
+    // ======================== TYPE MAP & HELPERS ========================
     const typeMap = {
         1: ["Speed Stat Up", "Speed Stat Down"],
         2: ["Stamina Stat Up", "Stamina Stat Down"],
@@ -502,16 +735,34 @@
     selector.appendChild(new Option("All Types", "all"));
     Object.entries(reversedMap).forEach(([s,_]) => selector.appendChild(new Option(fn(_), s)));
     
-    // ======================== RENDER ENGINE (identical to original, but uses currentSkillArray) ========================
+    // ======================== RENDER ENGINE (with search highlight) ========================
     function renderSkillViewer(effectArray, options = {}) {
         const mergedOptions = {
             mode: options.mode || 'full',
             highlightType: options.highlightType || 'all',
             showEmptyGroups: options.showEmptyGroups || false,
+            searchTerm: options.searchTerm || ''
         };
         if (!effectArray || effectArray.length === 0) {
-            return `<div class="empty-state">✨ No skill data available. Try loading a valid URL.</div>`;
+            return `<div class="empty-state">🔍 No skills match your filters. Try different search term or clear filters.</div>`;
         }
+        
+        // Apply type filter
+        let filteredByType = effectArray;
+        if (mergedOptions.highlightType !== 'all') {
+            const typeId = checkType(mergedOptions.highlightType);
+            if (typeId !== undefined) {
+                filteredByType = effectArray.filter(skill => {
+                    const groups = skill.condition_groups || [];
+                    return groups.some(g => (g.effects || []).some(e => e.type === Number(typeId)));
+                });
+            }
+        }
+        
+        if (filteredByType.length === 0) {
+            return `<div class="empty-state">⚠️ No skills match the selected type filter.</div>`;
+        }
+        
         const defaultTypeLabel = (typeNum, typeVal = 1) => {
             const h = typeVal > 0 ? 0 : 1;
             if(Array.isArray(typeMap[typeNum])) return typeMap[typeNum][h];
@@ -550,30 +801,27 @@
             return actual;
         };
         
-        let filteredArray = effectArray;
-        if (mergedOptions.highlightType !== 'all') {
-            const typeId = checkType(mergedOptions.highlightType);
-            if (typeId !== undefined) {
-                filteredArray = effectArray.filter(skill => {
-                    const groups = skill.condition_groups || [];
-                    return groups.some(g => (g.effects || []).some(e => e.type === Number(typeId)));
-                });
-            }
+        // Helper to highlight search term in name
+        function highlightName(name, term) {
+            if (!term || term.length === 0) return escapeHtml(name);
+            const escapedName = escapeHtml(name);
+            const escapedTerm = escapeHtml(term);
+            const regex = new RegExp(`(${escapedTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+            return escapedName.replace(regex, `<span class="search-highlight">$1</span>`);
         }
-        if (filteredArray.length === 0) {
-            return `<div class="empty-state">⚠️ No skills match the selected type filter.</div>`;
-        }
+        
         let cardsHtml = '';
-        for (let idx = 0; idx < filteredArray.length; idx++) {
-            const skill = filteredArray[idx];
-            const nameEn = skill.name_en || skill.enname || `Skill_${idx}`;
+        for (let idx = 0; idx < filteredByType.length; idx++) {
+            const skill = filteredByType[idx];
+            const rawName = skill.name_en || skill.enname || `Skill_${idx}`;
+            const nameEn = highlightName(rawName, mergedOptions.searchTerm);
             const groups = skill.condition_groups || [];
             const rare = skill.rarity || 1;
             function checkRare(t) {
                 const rpx = { 1: "", 2: "gold_grad", 3: "unique", 4: "uni_gold", 5: "uni_gold" };
                 return rpx[Number(t)] || "";
             }
-            const rarity = { 2: "Gold Skill", 3: "Unique Skill", 4: "Gold Unqiue Skill", 5: "Gold Unqiue Skill" };
+            const rarityMap = { 2: "Gold Skill", 3: "Unique Skill", 4: "Gold Unique Skill", 5: "Gold Unique Skill" };
             let bannerType = checkRare(rare);
             let groupsHtml = '';
             for (let gIdx = 0; gIdx < groups.length; gIdx++) {
@@ -624,8 +872,8 @@
             cardsHtml += `
                 <div class="skill-card ${bannerType}" data-skill-idx="${idx}">
                     <div class="skill-name">
-                        <span class="skill-name-en">📖 ${escapeHtml(nameEn)}</span>
-                        <span class="skill-badge">${rarity[rare] || "Normal Skill"}</span>
+                        <span class="skill-name-en">📖 ${nameEn}</span>
+                        <span class="skill-badge">${rarityMap[rare] || "Normal Skill"}</span>
                     </div>
                     ${groupsHtml || '<div class="condition-group"><div class="small text-muted p-3">No condition groups defined</div></div>'}
                 </div>
@@ -633,7 +881,11 @@
         }
         setTimeout(() => {
             const statsDiv = document.getElementById('statsDisplay');
-            if (statsDiv) statsDiv.innerHTML = `📚 ${filteredArray.length} / ${effectArray.length} skills displayed`;
+            if (statsDiv) {
+                const sourceNote = usingLocalFallback ? " (📁 local)" : " (🌐 remote)";
+                const searchNote = currentSearchTerm ? ` 🔍 "${currentSearchTerm}"` : "";
+                statsDiv.innerHTML = `📚 ${filteredByType.length} / ${currentSkillArray.length} skills${sourceNote}${searchNote}`;
+            }
         }, 0);
         return cardsHtml;
     }
@@ -648,7 +900,21 @@
         });
     }
     
-    // ======================== DYNAMIC LOADER WITH CUSTOM URL ========================
+    // ========== PRIORITY LOADER: OLD FALLBACK (window.skillData) FIRST ==========
+    function loadFromLocalSkillData() {
+        if (window.skillData && Array.isArray(window.skillData) && window.skillData.length > 0) {
+            console.log("✅ Using local fallback: window.skillData");
+            originalRawSkills = window.skillData.slice();
+            currentSkillArray = [...originalRawSkills];
+            usingLocalFallback = true;
+            const urlMsg = document.getElementById('urlStatusMsg');
+            if (urlMsg) urlMsg.innerHTML = `📦 Using LOCAL skillData (embedded).<br>Click "Load & Apply Remote" to override.`;
+            applyFiltersAndRender();
+            return true;
+        }
+        return false;
+    }
+    
     async function fetchSkillsFromUrl(url, showStatus = true) {
         if (isLoading) return false;
         isLoading = true;
@@ -659,49 +925,42 @@
             if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
             const data = await response.json();
             let skillArray = null;
-            if (Array.isArray(data)) {
-                skillArray = data;
-            } else if (data.skills && Array.isArray(data.skills)) {
-                skillArray = data.skills;
-            } else if (data.data && Array.isArray(data.data)) {
-                skillArray = data.data;
-            } else {
-                throw new Error("JSON does not contain an array of skills. Expected array or {skills:[]}");
-            }
+            if (Array.isArray(data)) skillArray = data;
+            else if (data.skills && Array.isArray(data.skills)) skillArray = data.skills;
+            else if (data.data && Array.isArray(data.data)) skillArray = data.data;
+            else throw new Error("JSON does not contain an array of skills.");
             const filteredSkills = skillArray.filter(x => x && (x.name_en != null || x.enname != null));
-            if (filteredSkills.length === 0) throw new Error("No valid skills with name_en/enname found.");
+            if (filteredSkills.length === 0) throw new Error("No valid skills found.");
             originalRawSkills = filteredSkills;
             currentSkillArray = [...originalRawSkills];
             currentActiveUrl = url;
-            // update local storage optional
+            usingLocalFallback = false;
             localStorage.setItem('uma_skills_custom', JSON.stringify(currentSkillArray));
             localStorage.setItem('uma_last_url', url);
-            // Update stats & re-render
-            updateViewer();
-            if (showStatus) {
-                const statusDiv = document.getElementById('urlStatusMsg');
-                if(statusDiv) statusDiv.innerHTML = `✅ Loaded ${currentSkillArray.length} skills from:<br> ${escapeHtml(url)}`;
+            applyFiltersAndRender();
+            if (showStatus && document.getElementById('urlStatusMsg')) {
+                document.getElementById('urlStatusMsg').innerHTML = `✅ Loaded ${currentSkillArray.length} skills from:<br> ${escapeHtml(url)}`;
             }
             return true;
         } catch (err) {
-            console.error("Fetch error:", err);
-            if (container && showStatus) container.innerHTML = `<div class="empty-state">❌ Failed to load from URL: ${escapeHtml(url)}<br>${err.message}<br><button id="retryDefaultBtn" style="margin-top:1rem;">↻ Reset to Default</button></div>`;
+            console.error(err);
+            if (container && showStatus) container.innerHTML = `<div class="empty-state">❌ Failed: ${escapeHtml(url)}<br>${err.message}<br><button id="retryDefaultBtn" style="margin-top:1rem;">↻ Reset to Default</button></div>`;
             const retryBtn = document.getElementById('retryDefaultBtn');
-            if (retryBtn) retryBtn.onclick = () => loadDefaultSkills();
+            if (retryBtn) retryBtn.onclick = () => loadDefaultRemoteSkills();
             return false;
         } finally {
             isLoading = false;
         }
     }
     
-    async function loadDefaultSkills() {
+    async function loadDefaultRemoteSkills() {
         const defaultUrl = "https://gametora.com/data/umamusume/skills.528f3ead.json";
         document.getElementById('customUrlInput').value = defaultUrl;
         await fetchSkillsFromUrl(defaultUrl, true);
     }
     
-    // Initial load (prioritize custom cache or default)
-    async function initializeSkills() {
+    async function initializeWithFallback() {
+        if (loadFromLocalSkillData()) return;
         const savedUrl = localStorage.getItem('uma_last_url');
         const cachedData = localStorage.getItem('uma_skills_custom');
         if (savedUrl && cachedData) {
@@ -711,43 +970,62 @@
                     originalRawSkills = parsed;
                     currentSkillArray = [...originalRawSkills];
                     currentActiveUrl = savedUrl;
+                    usingLocalFallback = false;
                     document.getElementById('customUrlInput').value = savedUrl;
-                    updateViewer();
+                    applyFiltersAndRender();
                     return;
                 }
-            } catch(e) { console.warn("cache invalid"); }
+            } catch(e) {}
         }
         await fetchSkillsFromUrl("https://gametora.com/data/umamusume/skills.528f3ead.json", true);
     }
     
-    // ======================== UI UPDATE ========================
-    let currentOptions = { mode: 'full', highlightType: 'all' };
-    
-    function updateViewer() {
+    // Apply search + type filters and re-render
+    function applyFiltersAndRender() {
+        if (!currentSkillArray.length) return;
+        let filtered = currentSkillArray;
+        if (currentSearchTerm && currentSearchTerm.trim().length > 0) {
+            filtered = filterSkillsByFuzzySearch(currentSkillArray, currentSearchTerm);
+        }
+        filteredSkillArray = filtered;
         const mode = document.getElementById('displayMode').value;
         const highlight = document.getElementById('typeHighlight').value;
-        currentOptions = { mode: mode, highlightType: highlight, showEmptyGroups: true };
-        const html = renderSkillViewer(currentSkillArray, currentOptions);
-        const container = document.getElementById('skillContainer');
-        if (container) container.innerHTML = html;
-        const statsSpan = document.getElementById('statsDisplay');
-        if (statsSpan) {
-            let filteredCount = currentSkillArray.length;
-            if (highlight !== 'all') {
-                const typeId = checkType(highlight);
-                if(typeId !== undefined) filteredCount = currentSkillArray.filter(skill => (skill.condition_groups || []).some(g => (g.effects || []).some(e => e.type === Number(typeId)))).length;
-            }
-            statsSpan.innerHTML = `📊 ${filteredCount} / ${currentSkillArray.length} skills | mode: ${mode}`;
-        }
+        const html = renderSkillViewer(filteredSkillArray, {
+            mode: mode,
+            highlightType: highlight,
+            searchTerm: currentSearchTerm
+        });
+        document.getElementById('skillContainer').innerHTML = html;
+        
+        // Update clear button visibility
+        const clearBtn = document.getElementById('clearSearchBtn');
+        if (clearBtn) clearBtn.style.display = currentSearchTerm ? 'block' : 'none';
     }
     
-    // Event binding
-    document.getElementById('refreshBtn').addEventListener('click', () => {
-        if(currentSkillArray.length) updateViewer();
-        else fetchSkillsFromUrl(currentActiveUrl, true);
+    // ======================== EVENT HANDLERS ========================
+    const searchInput = document.getElementById('skillSearch');
+    const clearSearchBtn = document.getElementById('clearSearchBtn');
+    
+    function handleSearch() {
+        currentSearchTerm = searchInput.value;
+        applyFiltersAndRender();
+    }
+    
+    searchInput.addEventListener('input', handleSearch);
+    clearSearchBtn.addEventListener('click', () => {
+        searchInput.value = '';
+        currentSearchTerm = '';
+        applyFiltersAndRender();
+        searchInput.focus();
     });
-    document.getElementById('displayMode').addEventListener('change', updateViewer);
-    document.getElementById('typeHighlight').addEventListener('change', updateViewer);
+    
+    document.getElementById('refreshBtn').addEventListener('click', () => {
+        if (currentSkillArray.length) applyFiltersAndRender();
+        else if (!usingLocalFallback) fetchSkillsFromUrl(currentActiveUrl, true);
+        else applyFiltersAndRender();
+    });
+    document.getElementById('displayMode').addEventListener('change', () => applyFiltersAndRender());
+    document.getElementById('typeHighlight').addEventListener('change', () => applyFiltersAndRender());
     
     // Popout logic
     const overlay = document.getElementById('urlPopoutOverlay');
@@ -766,10 +1044,7 @@
     
     applyBtn.addEventListener('click', async () => {
         let newUrl = customUrlInput.value.trim();
-        if (!newUrl) {
-            alert("Please enter a valid URL");
-            return;
-        }
+        if (!newUrl) { alert("Please enter a valid URL"); return; }
         if (!newUrl.startsWith('http://') && !newUrl.startsWith('https://')) {
             newUrl = 'https://' + newUrl;
             customUrlInput.value = newUrl;
@@ -778,8 +1053,27 @@
         await fetchSkillsFromUrl(newUrl, true);
     });
     
-    // initial type dropdown & start
-    initializeSkills();
+    initializeWithFallback();
+
+    // Dark Mode Toggle
+    const darkModeToggle = document.getElementById('darkModeToggle');
+    if (darkModeToggle) {
+        // Check localStorage for saved preference
+        const savedMode = localStorage.getItem('darkMode');
+        if (savedMode === 'enabled') {
+            document.body.classList.add('dark-mode');
+            darkModeToggle.textContent = '☀️ Light Mode';
+        } else {
+            darkModeToggle.textContent = '🌙 Dark Mode';
+        }
+        
+        darkModeToggle.addEventListener('click', () => {
+            document.body.classList.toggle('dark-mode');
+            const isDark = document.body.classList.contains('dark-mode');
+            localStorage.setItem('darkMode', isDark ? 'enabled' : 'disabled');
+            darkModeToggle.textContent = isDark ? '☀️ Light Mode' : '🌙 Dark Mode';
+        });
+    }
 </script>
 </body>
 </html>

@@ -26,7 +26,7 @@
             --input-bg: #334155;
             --input-border: #475569;
             --skill-bg: #334155;
-            --skill-hover: #475569;
+            --skill-hover: #648cc5;
             --alert-bg: #1e3a5f;
             --alert-text: #b0d4ff;
             --bg-light-custom: #334155;
@@ -126,7 +126,6 @@
         }
         
         .skill-container {
-            max-height: 260px;
             overflow-y: auto;
             border: 1px solid var(--border-color);
             border-radius: 1rem;
@@ -138,7 +137,7 @@
             display: inline-block;
             background: var(--skill-bg);
             border-radius: 30px;
-            padding: 4px 12px;
+            padding: 12px 16px;
             margin: 3px;
             font-weight: 500;
             cursor: pointer;
@@ -151,8 +150,12 @@
             background: var(--skill-hover);
         }
         
+        .skill-badge-gold {
+            background: #006fc073;
+        }
+        
         .skill-active {
-            background: #1e3a5f;
+            background: #00c2287a;
             color: white;
         }
         
@@ -269,7 +272,7 @@
         }
     </style>
 
-    <!-- <script src="skill.js"></script> -->
+    <script src="skill.js"></script>
     <script>
     	window.skillData = (typeof skillData !== 'undefined') ? skillData : null;
     </script>
@@ -523,7 +526,7 @@
                     <div class="stat-tier-card bg-opt">
                         <div class="fw-bold mb-2"><i class="bi bi-gem"></i> Optimized</div>
                         <div id="optStats">—</div>
-                        <div class="small text-secondary mt-2">Best distance/style based on aptitudes</div>
+                        <div class="small text-secondary mt-2">Recomended target based on Style/Distance</div>
                     </div>
                 </div>
             </div>
@@ -537,7 +540,12 @@
         <div class="card-header-custom"><i class="bi bi-droplet-half me-2"></i>4. Recovery Skills (Stamina Modifiers)</div>
         <div class="p-3">
             <div id="skillLibraryContainer" class="skill-container"></div>
-            <div class="mt-2 small text-secondary">Total STA Reduction: <strong id="totalStaReduction">0</strong> points (affects Recommended & Optimized targets).</div>
+            <div class="alert alert-info mt-3 mb-0 small">
+                💡 Total STAMINA Reduction: <strong id="totalStaReduction">0</strong> points (affects Recommended & Optimized targets value).
+            </div>
+            <button id="resetRec" class="btn btn-sm btn-outline-primary w-100 mt-5">
+                <i class="bi bi-arrow-repeat"></i> Reset Selection
+            </button>
         </div>
     </div>
     <footer class="text-center small mt-2">Optimizer selects the best distance automatically if character has higher aptitude elsewhere.</footer>
@@ -871,14 +879,21 @@
         const conclusion = meets ? '✅ All stats meet or exceed recommended. Strong build!' : '⚠️ Some stats below recommendations. Focus training on deficits.';
         document.getElementById('comparisonDetails').innerHTML = `<div class="mb-1">${diffHtml}</div><div class="mt-2">${conclusion}</div>`;
     }
+
+    function checkRare(t) {
+        // const rpx = { 1: "", 2: "gold_grad", 3: "unique", 4: "uni_gold", 5: "uni_gold" };skill-badge-gold
+        if(isNaN(t)) return "";
+        return t < 2 ? "" : "skill-badge-gold"
+    }
     
     function buildSkillLibrary() {
         const container = document.getElementById('skillLibraryContainer');
         container.innerHTML = '';
         staminaSkillsFull.forEach(skill => {
             const isActive = selectedRecoverySkills.includes(skill);
+            const rarity = pp.find(s => s.name_en == skill);
             const span = document.createElement('span');
-            span.className = `skill-badge ${isActive ? 'skill-active' : ''}`;
+            span.className = `skill-badge ${isActive ? 'skill-active' : ''} ${checkRare(rarity?.rarity)}`;
             span.innerText = skill?.toString();
             span.onclick = () => {
                 if (selectedRecoverySkills.includes(skill)) selectedRecoverySkills = selectedRecoverySkills.filter(s => s !== skill);
@@ -896,6 +911,13 @@
         aptIds.forEach(id => document.getElementById(id).addEventListener('change', () => { refreshAll(); compareStats(); }));
         document.getElementById('compareBtn').addEventListener('click', () => { refreshAll(); compareStats(); });
         ['userSpd', 'userSta', 'userPwr', 'userGut', 'userWit'].forEach(id => document.getElementById(id).addEventListener('input', compareStats));
+
+        document.getElementById("resetRec").addEventListener("click", () => {
+            selectedRecoverySkills = []
+            buildSkillLibrary();
+            refreshAll();
+            compareStats();
+        })
     }
     
     // Dark Mode Toggle Functionality
