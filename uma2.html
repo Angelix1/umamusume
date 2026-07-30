@@ -1,678 +1,975 @@
 <!DOCTYPE html>
-<html lang="en" data-bs-theme="dark">
+<html lang="en" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Skill Effect Viewer</title>
+    <title>Skill Effect Viewer v2</title>
     <style>
+        /* ===== CSS Variables ===== */
+        :root {
+            --bg-primary: #f0f2f5;
+            --bg-secondary: #ffffff;
+            --bg-card: #ffffff;
+            --bg-input: #ffffff;
+            --bg-hover: #f8fafc;
+            --text-primary: #1e293b;
+            --text-secondary: #475569;
+            --text-muted: #94a3b8;
+            --border-color: #e2e8f0;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+            --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+            --shadow-lg: 0 8px 24px rgba(0,0,0,0.12);
+            --radius-sm: 0.5rem;
+            --radius-md: 0.75rem;
+            --radius-lg: 1rem;
+            --transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            
+            /* Skill rarity colors */
+            --gold-start: #dfcc39;
+            --gold-end: #cfa80f;
+            --unique-start: #89eec3;
+            --unique-end: #ff67f6;
+            --uni-gold-start: #dbff5c;
+            --uni-gold-end: #c167ff;
+            --dbf-color: #9300a9;
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --bg-card: #1e293b;
+            --bg-input: #0f172a;
+            --bg-hover: #2d3748;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --border-color: #334155;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
+            --shadow-md: 0 4px 12px rgba(0,0,0,0.4);
+            --shadow-lg: 0 8px 24px rgba(0,0,0,0.5);
+        }
+
+        /* ===== Reset & Base ===== */
         * {
             box-sizing: border-box;
-        }
-        body {
-            background: #f0f2f5;
-            font-family: 'Segoe UI', Roboto, system-ui, -apple-system, sans-serif;
-            padding: 2rem;
             margin: 0;
-            transition: background 0.3s ease, color 0.2s ease;
+            padding: 0;
         }
-        body.dark-mode {
-            background: #0f172a;
+
+        body {
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-family: var(--font);
+            padding: 1.5rem;
+            transition: background var(--transition), color var(--transition);
+            min-height: 100vh;
         }
+
+        ::selection {
+            background: rgba(99, 102, 241, 0.3);
+            color: var(--text-primary);
+        }
+
+        /* ===== Scrollbar ===== */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--bg-primary);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--text-muted);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-secondary);
+        }
+
+        /* ===== Layout ===== */
         .container {
-            max-width: 1400px;
+            max-width: 1440px;
             margin: 0 auto;
+            animation: fadeIn 0.3s ease;
         }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ===== Header ===== */
         .header {
             background: linear-gradient(135deg, #1a2a3a, #0f1a24);
             color: white;
             padding: 1.5rem 2rem;
-            border-radius: 1rem;
-            margin-bottom: 2rem;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
-            transition: background 0.3s ease;
+            border-radius: var(--radius-lg);
+            margin-bottom: 1.5rem;
+            box-shadow: var(--shadow-md);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
         }
-        body.dark-mode .header {
+
+        [data-theme="dark"] .header {
             background: linear-gradient(135deg, #0f172a, #020617);
         }
+
+        .header h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            letter-spacing: -0.025em;
+        }
+
+        .header h1 span {
+            opacity: 0.7;
+            font-weight: 400;
+        }
+
+        .header-sub {
+            font-size: 0.85rem;
+            opacity: 0.7;
+            margin-top: 0.25rem;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 0.75rem;
+            align-items: center;
+        }
+
+        /* ===== Toolbar ===== */
         .toolbar {
-            background: white;
+            background: var(--bg-secondary);
             padding: 1rem 1.5rem;
-            border-radius: 0.75rem;
+            border-radius: var(--radius-md);
             margin-bottom: 1.5rem;
             display: flex;
             gap: 1rem;
             flex-wrap: wrap;
             align-items: center;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-            transition: background 0.3s ease, box-shadow 0.3s ease;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border-color);
+            transition: background var(--transition), border-color var(--transition);
         }
-        body.dark-mode .toolbar {
-            background: #1e293b;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+
+        .toolbar-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            flex-wrap: wrap;
         }
-        .toolbar label {
+
+        .toolbar-label {
+            font-size: 0.75rem;
             font-weight: 600;
-            font-size: 0.85rem;
-            color: #334155;
-            transition: color 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-secondary);
         }
-        body.dark-mode .toolbar label {
-            color: #cbd5e1;
+
+        /* ===== Form Elements ===== */
+        input, select, button {
+            font-family: var(--font);
+            font-size: 0.875rem;
         }
-        select, input {
-            padding: 0.4rem 0.8rem;
-            border-radius: 0.5rem;
-            border: 1px solid #cbd5e1;
-            background: white;
-            font-size: 0.85rem;
-            transition: background 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+
+        input, select {
+            padding: 0.45rem 0.8rem;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border-color);
+            background: var(--bg-input);
+            color: var(--text-primary);
+            transition: border-color var(--transition), box-shadow var(--transition);
+            outline: none;
+            min-height: 38px;
         }
-        body.dark-mode select, body.dark-mode input {
-            background: #0f172a;
-            border-color: #334155;
-            color: #e2e8f0;
+
+        input:focus, select:focus {
+            border-color: #6366f1;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
         }
+
+        select {
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748b' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.8rem center;
+            padding-right: 2.2rem;
+        }
+
+        /* ===== Search ===== */
         .search-wrapper {
             position: relative;
-            display: inline-block;
-            min-width: 220px;
+            flex: 1;
+            min-width: 200px;
+            max-width: 400px;
         }
+
         .search-wrapper input {
             width: 100%;
-            padding-right: 28px;
+            padding-right: 2.2rem;
         }
-        .search-clear {
+
+        .search-wrapper .search-icon {
             position: absolute;
-            right: 6px;
+            left: 0.8rem;
             top: 50%;
             transform: translateY(-50%);
-            cursor: pointer;
-            color: #94a3b8;
-            font-size: 1rem;
-            font-weight: bold;
+            color: var(--text-muted);
+            pointer-events: none;
+            font-size: 0.9rem;
+        }
+
+        .search-wrapper input {
+            padding-left: 2.2rem;
+        }
+
+        .search-clear {
+            position: absolute;
+            right: 0.6rem;
+            top: 50%;
+            transform: translateY(-50%);
             background: none;
             border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 1.1rem;
             padding: 0 4px;
+            display: none;
+            border-radius: 50%;
+            transition: background var(--transition);
+            min-height: auto;
         }
+
         .search-clear:hover {
-            color: #475569;
+            background: var(--bg-hover);
+            color: var(--text-primary);
         }
-        body.dark-mode .search-clear {
-            color: #64748b;
+
+        .search-wrapper .search-clear.visible {
+            display: block;
         }
-        body.dark-mode .search-clear:hover {
-            color: #94a3b8;
-        }
+
+        /* ===== Buttons ===== */
         button {
+            padding: 0.45rem 1rem;
+            border-radius: var(--radius-sm);
+            border: none;
             background: #1e3a5f;
             color: white;
-            border: none;
-            padding: 0.4rem 1rem;
-            border-radius: 0.5rem;
             cursor: pointer;
             font-weight: 500;
-            transition: 0.2s;
+            transition: all var(--transition);
+            min-height: 38px;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            white-space: nowrap;
         }
+
         button:hover {
             background: #0f2b48;
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-sm);
         }
-        body.dark-mode button {
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        [data-theme="dark"] button {
             background: #2d3a5f;
         }
-        body.dark-mode button:hover {
+        [data-theme="dark"] button:hover {
             background: #1e2c4a;
         }
-        .stats {
-            display: flex;
-            gap: 1rem;
-            margin-left: auto;
+
+        .btn-secondary {
+            background: var(--text-muted);
+        }
+        .btn-secondary:hover {
+            background: var(--text-secondary);
+        }
+
+        .btn-success {
+            background: #059669;
+        }
+        .btn-success:hover {
+            background: #047857;
+        }
+
+        .btn-danger {
+            background: #dc2626;
+        }
+        .btn-danger:hover {
+            background: #b91c1c;
+        }
+
+        .btn-sm {
+            padding: 0.3rem 0.7rem;
             font-size: 0.8rem;
-            color: #475569;
+            min-height: 30px;
+        }
+
+        /* ===== Stats ===== */
+        .stats {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            display: flex;
             align-items: center;
-            transition: color 0.3s ease;
-        }
-        body.dark-mode .stats {
-            color: #94a3b8;
-        }
-        
-
-        /* Simpler faded neon gradients without animation */
-        .gold_grad {
-            overflow: hidden;
-            background-image: linear-gradient(135deg, rgba(218, 165, 32, 0.12), rgba(255, 215, 0, 0.06)) !important;
-            border-left: 2px solid rgba(218, 165, 32, 0.3);
-        }
-        
-        .unique {
-            overflow: hidden;
-            background-image: linear-gradient(135deg, rgba(137, 238, 195, 0.1), rgba(255, 103, 246, 0.06)) !important;
-            border-left: 2px solid rgba(137, 238, 195, 0.3);
-        }
-        
-        .uni_gold {
-            overflow: hidden;
-            background-image: linear-gradient(135deg, rgba(219, 255, 92, 0.1), rgba(193, 103, 255, 0.06)) !important;
-            border-left: 2px solid rgba(193, 103, 255, 0.3);
-        }
-        
-        .dbf {
-            background: rgba(147, 0, 169, 0.06) !important;
-            border-left: 2px solid rgba(147, 0, 169, 0.3);
-        }
-        
-        /* Light mode originals */
-        body:not(.dark-mode) .gold_grad {
-            background-image: linear-gradient(to right, #dfcc39ab, #cfa80ffc) !important;
-            border-left: none;
-        }
-        
-        body:not(.dark-mode) .unique {
-            background-image: linear-gradient(to right, #89eec3, #ff67f6) !important;
-            border-left: none;
-        }
-        
-        body:not(.dark-mode) .uni_gold {
-            background-image: linear-gradient(to right, #dbff5c, #c167ff) !important;
-            border-left: none;
-        }
-        
-        body:not(.dark-mode) .dbf {
-            background: #9300a91f !important;
-            border-left: none;
+            gap: 0.5rem;
+            margin-left: auto;
+            padding: 0.3rem 0.8rem;
+            background: var(--bg-primary);
+            border-radius: 20px;
+            border: 1px solid var(--border-color);
         }
 
+        .stats .badge {
+            background: var(--text-secondary);
+            color: var(--bg-primary);
+            padding: 0.1rem 0.5rem;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 0.7rem;
+        }
 
+        .stats .badge.error {
+            background: #dc2626;
+            color: white;
+        }
 
+        /* ===== Skill Grid ===== */
         .skill-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(480px, 1fr));
             gap: 1.25rem;
+            margin-top: 0.5rem;
         }
+
+        /* ===== Skill Card ===== */
         .skill-card {
-            background: white;
-            border-radius: 1rem;
+            background: var(--bg-card);
+            border-radius: var(--radius-lg);
             overflow: hidden;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-            transition: transform 0.1s ease, background 0.3s ease, box-shadow 0.3s ease;
-            border: 1px solid #e2e8f0;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border-color);
+            transition: all var(--transition);
+            position: relative;
         }
-        body.dark-mode .skill-card {
-            background: #1e293b;
-            border-color: #334155;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-        }
+
         .skill-card:hover {
-            box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+            box-shadow: var(--shadow-md);
+            transform: translateY(-2px);
         }
-        body.dark-mode .skill-card:hover {
-            box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+
+        /* Rarity styles with pure CSS gradients */
+        .skill-card.rarity-gold {
+            background: linear-gradient(135deg, rgba(218, 165, 32, 0.08), rgba(255, 215, 0, 0.04));
+            border-left: 3px solid #d4a017;
         }
+
+        .skill-card.rarity-unique {
+            background: linear-gradient(135deg, rgba(137, 238, 195, 0.08), rgba(255, 103, 246, 0.04));
+            border-left: 3px solid #89eec3;
+        }
+
+        .skill-card.rarity-uni-gold {
+            background: linear-gradient(135deg, rgba(219, 255, 92, 0.08), rgba(193, 103, 255, 0.04));
+            border-left: 3px solid #c167ff;
+        }
+
+        .skill-card.rarity-dbf {
+            background: rgba(147, 0, 169, 0.04);
+            border-left: 3px solid #9300a9;
+        }
+
+        [data-theme="light"] .skill-card.rarity-gold {
+            background: linear-gradient(135deg, #dfcc39ab, #cfa80ffc);
+            border-left: none;
+        }
+        [data-theme="light"] .skill-card.rarity-unique {
+            background: linear-gradient(135deg, #89eec3, #ff67f6);
+            border-left: none;
+        }
+        [data-theme="light"] .skill-card.rarity-uni-gold {
+            background: linear-gradient(135deg, #dbff5c, #c167ff);
+            border-left: none;
+        }
+        [data-theme="light"] .skill-card.rarity-dbf {
+            background: #9300a91f;
+            border-left: none;
+        }
+
+        /* ===== Skill Name ===== */
         .skill-name {
-            background: inherit;
             padding: 1rem 1.25rem;
             font-weight: 700;
-            font-size: 1.3rem;
-            border-bottom: 2px solid darkcyan;
+            font-size: 1.15rem;
+            border-bottom: 2px solid var(--border-color);
             display: flex;
             justify-content: space-between;
             align-items: center;
             flex-wrap: wrap;
             gap: 0.5rem;
+            transition: border-color var(--transition);
         }
+
         .skill-name-en {
-            color: #0f172a;
+            color: var(--text-primary);
             word-break: break-word;
-            transition: color 0.3s ease;
         }
-        body.dark-mode .skill-name-en {
-            color: #f1f5f9;
-        }
+
         .skill-badge {
-            background: #eef2ff;
-            color: #1e3a8a;
-            font-size: 0.8rem;
-            padding: 0.2rem 0.6rem;
-            border-radius: 30px;
-            font-weight: 500;
-            transition: background 0.3s ease, color 0.3s ease;
+            font-size: 0.7rem;
+            padding: 0.2rem 0.7rem;
+            border-radius: 20px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            background: rgba(99, 102, 241, 0.1);
+            color: #6366f1;
+            border: 1px solid rgba(99, 102, 241, 0.2);
         }
-        body.dark-mode .skill-badge {
-            background: #2d3a5f;
-            color: #93c5fd;
+
+        [data-theme="dark"] .skill-badge {
+            background: rgba(99, 102, 241, 0.15);
+            color: #818cf8;
         }
+
+        /* ===== Condition Group ===== */
         .condition-group {
-            padding: 1rem 1.25rem;
-            border-bottom: 1px solid #f0f2f5;
-            transition: border-color 0.3s ease;
+            padding: 0.75rem 1.25rem;
+            border-bottom: 1px solid var(--border-color);
+            transition: border-color var(--transition);
         }
-        body.dark-mode .condition-group {
-            border-bottom-color: #334155;
-        }
+
         .condition-group:last-child {
             border-bottom: none;
         }
+
         .group-header {
             font-weight: 600;
-            color: #2c3e66;
-            background: #f1f5f9;
-            display: inline-block;
-            padding: 0.2rem 0.7rem;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            margin-bottom: 0.75rem;
-            transition: background 0.3s ease, color 0.3s ease;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
         }
-        body.dark-mode .group-header {
-            background: #0f172a;
-            color: #a5b4fc;
+
+        .group-header .group-num {
+            background: var(--bg-primary);
+            padding: 0.1rem 0.5rem;
+            border-radius: 12px;
+            font-size: 0.7rem;
         }
+
+        /* ===== Info Row ===== */
         .info-row {
             display: flex;
             flex-wrap: wrap;
-            gap: 1rem;
-            margin-bottom: 0.75rem;
-            font-size: 1rem;
-            background: #fafcff;
-            padding: 0.5rem 0.75rem;
-            border-radius: 0.6rem;
-            transition: background 0.3s ease;
-        }
-        body.dark-mode .info-row {
-            background: #0f172a;
-        }
-        .info-label {
-            font-weight: 700;
-            color: #475569;
-            min-width: 90px;
-            transition: color 0.3s ease;
-        }
-        body.dark-mode .info-label {
-            color: #94a3b8;
-        }
-        .info-value {
-            color: #1e293b;
-            font-family: monospace;
-            font-size: 1rem;
-            transition: color 0.3s ease;
-        }
-        body.dark-mode .info-value {
-            color: #cbd5e1;
-        }
-        .effect-item {
-            background: #fefce8;
-            margin: 0.5rem 0;
-            padding: 0.6rem 0.75rem;
-            border-radius: 0.6rem;
-            border-left: 4px solid;
-            font-size: 1rem;
-            transition: background 0.3s ease;
+            gap: 0.75rem 1.5rem;
+            font-size: 0.875rem;
+            background: var(--bg-primary);
+            padding: 0.4rem 0.75rem;
+            border-radius: var(--radius-sm);
+            margin-bottom: 0.6rem;
+            transition: background var(--transition);
         }
 
-        body.dark-mode .effect-item {
-            background: #2d2a1e;
-            color: blanchedalmond;
+        .info-label {
+            font-weight: 600;
+            color: var(--text-secondary);
         }
-        .effect-type-green { border-left-color: #10b981; background: #ecfdf5; }
-        .effect-type-yellow { border-left-color: #e19827; background: #ecfdf5;}
-        body.dark-mode .effect-type-green { background: #064e3b; border-left-color: #34d399; }
-        body.dark-mode .effect-type-yellow { background: #78350f; border-left-color: #fbbf24; }
-        .empty-state {
-            text-align: center;
-            padding: 4rem;
-            color: #64748b;
-            background: white;
-            border-radius: 1rem;
-            transition: background 0.3s ease, color 0.3s ease;
+
+        .info-value {
+            color: var(--text-primary);
+            font-family: 'SF Mono', 'Consolas', monospace;
         }
-        body.dark-mode .empty-state {
-            background: #1e293b;
-            color: #94a3b8;
+
+        /* ===== Effect Item ===== */
+        .effect-item {
+            padding: 0.5rem 0.75rem;
+            border-radius: var(--radius-sm);
+            margin: 0.4rem 0;
+            border-left: 3px solid;
+            transition: background var(--transition);
+            font-size: 0.875rem;
         }
-        .time-badge {
-            background: #e2e8f0;
-            border-radius: 20px;
-            padding: 0.15rem 0.5rem;
-            font-size: 1rem;
-            font-family: monospace;
-            font-weight: 700;
-            transition: background 0.3s ease, color 0.3s ease;
+
+        .effect-item.effect-positive {
+            background: rgba(16, 185, 129, 0.08);
+            border-left-color: #10b981;
         }
-        body.dark-mode .time-badge {
-            background: #334155;
-            color: #e2e8f0;
+
+        .effect-item.effect-negative {
+            background: rgba(245, 158, 11, 0.08);
+            border-left-color: #f59e0b;
         }
-        footer {
-            text-align: center;
-            margin-top: 2rem;
-            color: #94a3b8;
-            font-size: 0.75rem;
-            transition: color 0.3s ease;
+
+        [data-theme="dark"] .effect-item.effect-positive {
+            background: rgba(16, 185, 129, 0.12);
         }
-        body.dark-mode footer {
-            color: #64748b;
+        [data-theme="dark"] .effect-item.effect-negative {
+            background: rgba(245, 158, 11, 0.12);
         }
-        .url-dropdown {
-            position: relative;
-            display: inline-block;
+
+        .effect-item .effect-detail {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem 1rem;
+            margin-top: 0.2rem;
+            font-size: 0.8rem;
         }
-        .url-dropdown-btn {
-            background: #2c3e66;
+
+        .effect-item .effect-detail span {
             display: flex;
             align-items: center;
-            gap: 0.5rem;
+            gap: 0.25rem;
         }
-        .url-dropdown-btn:hover {
-            background: #1e2c4a;
+
+        .effect-item code {
+            background: var(--bg-primary);
+            padding: 0.1rem 0.4rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
         }
+
+        /* ===== Time Badge ===== */
+        .time-badge {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 0.1rem 0.6rem;
+            font-family: 'SF Mono', 'Consolas', monospace;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        /* ===== Empty State ===== */
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--text-secondary);
+            background: var(--bg-card);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border-color);
+            grid-column: 1 / -1;
+        }
+
+        .empty-state .icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+        .empty-state h3 {
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+        .empty-state .sub {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+        .empty-state .error-detail {
+            margin-top: 1rem;
+            padding: 0.75rem;
+            background: rgba(220, 38, 38, 0.08);
+            border-radius: var(--radius-sm);
+            font-size: 0.8rem;
+            color: #dc2626;
+            border: 1px solid rgba(220, 38, 38, 0.2);
+        }
+        [data-theme="dark"] .empty-state .error-detail {
+            background: rgba(220, 38, 38, 0.12);
+            color: #f87171;
+        }
+
+        /* ===== Popout Modal ===== */
         .popout-overlay {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            inset: 0;
             background: rgba(0,0,0,0.5);
-            backdrop-filter: blur(3px);
+            backdrop-filter: blur(4px);
             display: flex;
             align-items: center;
             justify-content: center;
             z-index: 1000;
             opacity: 0;
             visibility: hidden;
-            transition: all 0.2s ease;
+            transition: all 0.25s ease;
         }
+
         .popout-overlay.active {
             opacity: 1;
             visibility: visible;
         }
+
         .popout-card {
-            background: white;
-            border-radius: 1.2rem;
+            background: var(--bg-secondary);
+            border-radius: var(--radius-lg);
             width: 90%;
             max-width: 500px;
-            box-shadow: 0 20px 35px rgba(0,0,0,0.3);
-            overflow: hidden;
-            animation: slideUp 0.2s ease;
-            transition: background 0.3s ease;
+            box-shadow: var(--shadow-lg);
+            animation: slideUp 0.25s ease;
+            border: 1px solid var(--border-color);
         }
-        body.dark-mode .popout-card {
-            background: #1e293b;
-        }
+
         @keyframes slideUp {
-            from {
-                transform: translateY(30px);
-                opacity: 0;
-            }
-            to {
-                transform: translateY(0);
-                opacity: 1;
-            }
+            from { transform: translateY(30px) scale(0.98); opacity: 0; }
+            to { transform: translateY(0) scale(1); opacity: 1; }
         }
+
         .popout-header {
-            background: #1a2a3a;
-            color: white;
             padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--border-color);
             display: flex;
             justify-content: space-between;
             align-items: center;
-            transition: background 0.3s ease;
         }
-        body.dark-mode .popout-header {
-            background: #0f172a;
-        }
+
         .popout-header h3 {
-            margin: 0;
-            font-size: 1.2rem;
+            font-size: 1.1rem;
+            color: var(--text-primary);
         }
-        .close-popout {
-            background: none;
-            font-size: 1.5rem;
-            cursor: pointer;
-            padding: 0;
-            line-height: 1;
-            color: white;
-            opacity: 0.8;
-        }
-        .close-popout:hover {
-            opacity: 1;
-            background: none;
-        }
+
         .popout-body {
             padding: 1.5rem;
-            color: #1e293b;
-            transition: color 0.3s ease;
         }
-        body.dark-mode .popout-body {
-            color: #e2e8f0;
-        }
+
         .popout-body label {
-            font-weight: 600;
             display: block;
-            margin-bottom: 0.5rem;
+            font-weight: 600;
             font-size: 0.85rem;
+            margin-bottom: 0.4rem;
+            color: var(--text-secondary);
         }
+
         .popout-body input {
             width: 100%;
-            padding: 0.7rem;
-            border-radius: 0.6rem;
-            border: 1px solid #cbd5e1;
-            font-family: monospace;
-            margin-bottom: 1rem;
-        }
-        .url-status {
+            padding: 0.6rem 0.8rem;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border-color);
+            background: var(--bg-input);
+            color: var(--text-primary);
+            font-family: 'SF Mono', 'Consolas', monospace;
             font-size: 0.8rem;
-            padding: 0.5rem;
-            border-radius: 0.5rem;
-            margin-top: 0.5rem;
-            background: #f1f5f9;
-            transition: background 0.3s ease, color 0.3s ease;
         }
-        body.dark-mode .url-status {
-            background: #0f172a;
-            color: #cbd5e1;
-        }
+
         .popout-actions {
             display: flex;
-            gap: 0.8rem;
+            gap: 0.75rem;
             justify-content: flex-end;
             margin-top: 1rem;
         }
-        .btn-secondary {
-            background: #64748b;
-        }
-        .btn-secondary:hover {
-            background: #475569;
-        }
-        .btn-primary {
-            background: #1e3a5f;
-        }
-        .btn-primary:hover {
-            background: #0f2b48;
-        }
-        .loading-spinner {
+
+        /* ===== Loading Spinner ===== */
+        .spinner {
             display: inline-block;
-            width: 14px;
-            height: 14px;
-            border: 2px solid rgba(255,255,255,0.3);
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--border-color);
+            border-top-color: #6366f1;
             border-radius: 50%;
-            border-top-color: white;
             animation: spin 0.6s linear infinite;
-            margin-right: 6px;
         }
+
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
+
+        /* ===== Search Highlight ===== */
         .search-highlight {
-            background-color: #fef08a;
-            border-radius: 2px;
+            background: rgba(251, 191, 36, 0.3);
             padding: 0 2px;
-            font-weight: bold;
+            border-radius: 2px;
+            font-weight: 600;
         }
-        body.dark-mode .search-highlight {
-            background-color: #854d0e;
-            color: #fef08a;
+
+        [data-theme="dark"] .search-highlight {
+            background: rgba(251, 191, 36, 0.2);
+            color: #fbbf24;
         }
-        @media (max-width: 700px) {
+
+        /* ===== Footer ===== */
+        .footer {
+            text-align: center;
+            margin-top: 2.5rem;
+            padding: 1.5rem;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .footer a {
+            color: var(--text-secondary);
+            text-decoration: none;
+        }
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* ===== Responsive ===== */
+        @media (max-width: 768px) {
             body { padding: 1rem; }
-            .skill-grid { grid-template-columns: 1fr; }
-            .toolbar { flex-direction: column; align-items: stretch; }
-            .stats { margin-left: 0; justify-content: space-between; }
-            .search-wrapper { width: 100%; }
+            
+            .header {
+                flex-direction: column;
+                align-items: stretch;
+                text-align: center;
+                padding: 1rem 1.25rem;
+            }
+            .header h1 { font-size: 1.2rem; }
+            .header-actions { justify-content: center; }
+
+            .toolbar {
+                flex-direction: column;
+                align-items: stretch;
+                padding: 1rem;
+            }
+            .toolbar-group { flex-wrap: wrap; }
+            .search-wrapper { max-width: none; }
+            .stats { margin-left: 0; justify-content: center; }
+
+            .skill-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            .skill-name {
+                font-size: 1rem;
+                padding: 0.75rem 1rem;
+            }
+            .condition-group {
+                padding: 0.5rem 1rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header h1 { font-size: 1rem; }
+            .toolbar-group { flex-direction: column; align-items: stretch; }
+            .toolbar-group select,
+            .toolbar-group button {
+                width: 100%;
+                justify-content: center;
+            }
+            .stats { flex-wrap: wrap; justify-content: center; }
         }
     </style>
-	<script src="skill.js"></script>
-	<script src="cat.js"></script>
-    <script>
-    	window.skillData = (typeof skillData !== 'undefined') ? skillData : null;
-    </script>
+
+    <!-- Data source files -->
+    <script src="skill.js"></script>
+    <script src="cat.js"></script>
 </head>
 <body>
 <div class="container">
-    <div class="header">
-        <h1>📊 Skill Effect Viewer</h1>
-        <p>Made by Mikazuki</p>
+    <!-- Header -->
+    <header class="header">
+        <div>
+            <h1>⚡ Skill Effect Viewer <span>v2</span></h1>
+            <div class="header-sub">Made by Mikazuki · Real-time skill data viewer</div>
+        </div>
+        <div class="header-actions">
+            <button id="darkModeToggle" class="btn-secondary btn-sm">🌙 Dark</button>
+            <button id="refreshBtn" class="btn-sm">⟳ Refresh</button>
+        </div>
+    </header>
+
+    <!-- Toolbar -->
+    <div class="toolbar" id="toolbar">
+        <div class="toolbar-group" style="flex:1;">
+            <div class="search-wrapper">
+                <span class="search-icon">🔍</span>
+                <input type="text" id="skillSearch" placeholder="Search skill name..." autocomplete="off">
+                <button class="search-clear" id="clearSearchBtn">✕</button>
+            </div>
+        </div>
+
+        <div class="toolbar-group">
+            <span class="toolbar-label">Display</span>
+            <select id="displayMode">
+                <option value="full">Full</option>
+                <option value="compact">Compact</option>
+                <option value="debug">Debug</option>
+            </select>
+        </div>
+
+        <div class="toolbar-group">
+            <span class="toolbar-label">Filter</span>
+            <select id="typeHighlight">
+                <option value="all">All Types</option>
+            </select>
+        </div>
+
+        <div class="toolbar-group">
+            <button id="urlSettingsBtn" class="btn-secondary btn-sm">🌐 Data Source</button>
+        </div>
+
+        <div class="stats" id="statsDisplay">
+            <span id="skillCount">0</span> skills
+            <span class="badge" id="sourceBadge">unknown</span>
+        </div>
     </div>
 
-    <div class="toolbar">
-        <div class="search-wrapper">
-            <input type="text" id="skillSearch" placeholder="🔍 Fuzzy search skill name..." autocomplete="off">
-            <button class="search-clear" id="clearSearchBtn" style="display: none;">✖</button>
-        </div>
-        <label>🔍 Display mode:</label>
-        <select id="displayMode">
-            <option value="full">Full Details</option>
-            <option value="compact">Compact (hide raw numbers)</option>
-            <option value="debug">Debug (show raw values)</option>
-        </select>
-        <label>🎨 Effect type:</label>
-        <select id="typeHighlight">
-        </select>
-
-        <button id="darkModeToggle" style="background: #4a5568;">🌙 Dark/Light</button>
-        
-        <div class="url-dropdown">
-            <button id="urlSettingsBtn" class="url-dropdown-btn">🌐 Data Source ▼</button>
-        </div>
-        
-        <button id="refreshBtn">⟳ Refresh</button>
-        <div class="stats" id="statsDisplay">0 skills loaded</div>
-    </div>
-
+    <!-- Skill Grid -->
     <div id="skillContainer" class="skill-grid">
-        <div class="empty-state">Initializing skill data...</div>
+        <div class="empty-state">
+            <div class="icon">⏳</div>
+            <h3>Loading skills...</h3>
+            <p class="sub">Please wait while we fetch the data</p>
+        </div>
     </div>
-    <p style="text-align: center; margin: 2em;">
-        <a href="uma2.html" download="uma2.html" style="opacity: 70%;">📎 Download this page</a>
-    </p>
+
+    <!-- Footer -->
+    <footer class="footer">
+        Data sourced from dataminer JSON · Skills update automatically with game patches
+    </footer>
 </div>
 
 <!-- Popout Modal -->
 <div id="urlPopoutOverlay" class="popout-overlay">
     <div class="popout-card">
         <div class="popout-header">
-            <h3>🔗 Override Remote Skill Data URL</h3>
-            <button class="close-popout" id="closePopoutBtn">&times;</button>
+            <h3>🔗 Data Source Configuration</h3>
+            <button class="close-popout" id="closePopoutBtn" style="background:none;color:var(--text-secondary);font-size:1.5rem;padding:0;min-height:auto;">&times;</button>
         </div>
         <div class="popout-body">
-            <label>Enter JSON endpoint URL:</label>
-            <input type="text" id="customUrlInput" placeholder="https://example.com/skills.json" value="https://gametora.com/data/umamusume/skills.528f3ead.json">
-            <div class="url-status" id="urlStatusMsg">
-                💡 URL for remote fetch (if no local skillData)
+            <label>JSON Endpoint URL</label>
+            <input type="text" id="customUrlInput" placeholder="https://example.com/skills.json">
+            <div style="margin-top:0.5rem;font-size:0.8rem;color:var(--text-muted);">
+                <span id="urlStatusMsg">💡 Using URL from cat.js (SKL) if available</span>
             </div>
             <div class="popout-actions">
                 <button id="cancelUrlBtn" class="btn-secondary">Cancel</button>
-                <button id="applyUrlBtn" class="btn-primary">Load & Apply Remote</button>
+                <button id="applyUrlBtn" class="btn-success">Load & Apply</button>
             </div>
         </div>
     </div>
 </div>
 
 <script>
-    // ======================== FUZZY SEARCH IMPLEMENTATION ========================
-    // Simple but effective fuzzy scoring (Levenshtein-based + substring bonus)
-    function fuzzyMatchScore(query, text) {
-        if (!query || query.length === 0) return 1.0;
-        if (!text) return 0;
-        
+    // ============================================================
+    // 1. CONFIGURATION
+    // ============================================================
+    const CONFIG = {
+        storageKey: 'uma_skills_cache',
+        urlStorageKey: 'uma_skills_url'
+    };
+
+    // ============================================================
+    // 2. STATE
+    // ============================================================
+    const state = {
+        allSkills: [],
+        filteredSkills: [],
+        sourceUrl: '',
+        sourceType: 'unknown',
+        searchTerm: '',
+        displayMode: 'full',
+        filterType: 'all',
+        isLoading: false,
+        isDark: true,
+        hasError: false
+    };
+
+    // ============================================================
+    // 3. DOM REFS
+    // ============================================================
+    const $ = id => document.getElementById(id);
+    const dom = {
+        container: $('skillContainer'),
+        search: $('skillSearch'),
+        clearBtn: $('clearSearchBtn'),
+        displayMode: $('displayMode'),
+        typeFilter: $('typeHighlight'),
+        stats: $('statsDisplay'),
+        skillCount: $('skillCount'),
+        sourceBadge: $('sourceBadge'),
+        refreshBtn: $('refreshBtn'),
+        darkToggle: $('darkModeToggle'),
+        urlBtn: $('urlSettingsBtn'),
+        popout: $('urlPopoutOverlay'),
+        closePopout: $('closePopoutBtn'),
+        cancelUrl: $('cancelUrlBtn'),
+        applyUrl: $('applyUrlBtn'),
+        urlInput: $('customUrlInput'),
+        urlStatus: $('urlStatusMsg')
+    };
+
+    // ============================================================
+    // 4. UTILITY FUNCTIONS
+    // ============================================================
+    
+    // Fuzzy search with optimized Levenshtein
+    function fuzzyMatch(query, text) {
+        if (!query || !text) return 0;
         const q = query.toLowerCase().trim();
         const t = text.toLowerCase();
-        
-        // Exact substring match gets high score
-        if (t.includes(q)) {
-            // shorter text with exact match gets better score
-            return 1.0 - (Math.min(1, (t.length - q.length) / 100) * 0.3);
-        }
-        
-        // Calculate simple Levenshtein distance for fuzzy matching
+        if (!q) return 1;
+        if (t.includes(q)) return 1 - Math.min(1, (t.length - q.length) / 200);
+
+        // Optimized Levenshtein (uses less memory)
         function levenshtein(a, b) {
-            const matrix = [];
-            for (let i = 0; i <= b.length; i++) matrix[i] = [i];
-            for (let j = 0; j <= a.length; j++) matrix[0][j] = j;
-            for (let i = 1; i <= b.length; i++) {
-                for (let j = 1; j <= a.length; j++) {
-                    const cost = a[j-1] === b[i-1] ? 0 : 1;
-                    matrix[i][j] = Math.min(
-                        matrix[i-1][j] + 1,
-                        matrix[i][j-1] + 1,
-                        matrix[i-1][j-1] + cost
+            if (a.length > b.length) [a, b] = [b, a];
+            let prev = Array(b.length + 1);
+            for (let i = 0; i <= b.length; i++) prev[i] = i;
+            
+            for (let i = 1; i <= a.length; i++) {
+                const curr = [i];
+                for (let j = 1; j <= b.length; j++) {
+                    curr[j] = Math.min(
+                        prev[j] + 1,
+                        curr[j-1] + 1,
+                        prev[j-1] + (a[i-1] === b[j-1] ? 0 : 1)
                     );
                 }
+                prev = curr;
             }
-            return matrix[b.length][a.length];
+            return prev[b.length];
         }
-        
+
         const maxLen = Math.max(q.length, t.length);
         if (maxLen === 0) return 0;
         const distance = levenshtein(q, t);
-        const similarity = 1 - (distance / maxLen);
-        
-        // Additional bonus for matching first letters or word boundaries
-        let wordBonus = 0;
-        const qWords = q.split(/[\s\-_]+/);
-        const tWords = t.split(/[\s\-_]+/);
-        for (const qWord of qWords) {
-            if (qWord.length >= 2) {
-                for (const tWord of tWords) {
-                    if (tWord.startsWith(qWord)) wordBonus += 0.15;
-                    else if (tWord.includes(qWord)) wordBonus += 0.08;
-                }
-            }
-        }
-        
-        return Math.min(1.0, similarity + wordBonus);
+        return 1 - (distance / maxLen);
     }
-    
-    // Filter skills by fuzzy search on name_en or enname
-    function filterSkillsByFuzzySearch(skills, searchTerm) {
-        if (!searchTerm || searchTerm.trim().length === 0) return skills;
-        const term = searchTerm.trim();
-        const scored = skills.map(skill => {
-            const name = (skill.name_en || skill.enname || '').toLowerCase();
-            const score = fuzzyMatchScore(term, name);
-            return { skill, score };
-        });
-        const filtered = scored.filter(item => item.score > 0.25); // threshold 0.25
-        filtered.sort((a, b) => b.score - a.score);
-        return filtered.map(item => item.skill);
+
+    // Debounce
+    function debounce(fn, delay = 300) {
+        let timer;
+        return (...args) => {
+            clearTimeout(timer);
+            timer = setTimeout(() => fn(...args), delay);
+        };
     }
-    
-    // ======================== GLOBALS ========================
-    let currentSkillArray = [];      // full unfiltered master list (original loaded data)
-    let filteredSkillArray = [];      // after fuzzy search + type filter
-    let originalRawSkills = [];
-    let currentActiveUrl = (typeof(SKL) != "undefined") ? SKL : "https://gametora.com/data/umamusume/skills.528f3ead.json";
-    let isLoading = false;
-    let usingLocalFallback = false;
-    let currentSearchTerm = "";
-    
-    // ======================== TYPE MAP & HELPERS ========================
-    const typeMap = {
-        1: ["Speed Stat Up", "Speed Stat Down"],
-        2: ["Stamina Stat Up", "Stamina Stat Down"],
-        3: ["Power Stat Up", "Power Stat Down"],
-        4: ["Guts Stat Up", "Guts Stat Down"],
-        5: ["Wits Stat Up", "Wits Stat Down"],
-        6: "Change Strategy (Runaway)",
-        8: "Field of View Decrease",
+
+    // Escape HTML
+    function escapeHtml(str) {
+        if (!str) return '';
+        const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;' };
+        return str.replace(/[&<>]/g, m => map[m]);
+    }
+
+    // ============================================================
+    // 5. TYPE MAPS (from original)
+    // ============================================================
+    const TYPE_MAP = {
+        1: ["Speed", "Speed Down"],
+        2: ["Stamina", "Stamina Down"],
+        3: ["Power", "Power Down"],
+        4: ["Guts", "Guts Down"],
+        5: ["Wits", "Wits Down"],
+        6: "Change Strategy",
+        8: ["Field of View Increase", "Field of View Decrease"],
         9: ["Stamina Recovery", "Stamina Drain"],
         10: "Improve Start Reaction",
         13: "Frenzied",
@@ -682,26 +979,25 @@
         27: "Increase Target Speed",
         28: "Increase Lane Movement Speed",
         29: "Decrease Rush Chance",
-        31: ["Acceleration Increase", "Acceleration Decrease"],
-        35: "Change Lane (After % Track)",
-        501: "All Stat Increase During Festival",
-        502: "All Stat Increase During Festival",
-        503: "Mood Maxed During Carnival"
+        31: ["Acceleration Up", "Acceleration Down"],
+        35: "Change Lane",
+        501: "All Stat Up Festival",
+        502: "All Stat Up Festival",
+        503: "Mood Max Carnival"
     };
-    const ignoreList = [1, 2, 3, 4, 5, 10, 13, 14];
-    const timeList = [13, 14];
-    const percentList = [29, 35];
-    const targetData = {
+
+    const TARGET_MAP = {
         4: "Within Field Of View",
         9: "Ahead of you",
         10: "Behind of you",
-        18: "All Targetted Runner",
+        18: "All Runners",
         19: "Ahead of You",
         20: "Behind of You",
-        21: "Frenzied Runner (Rush Time)",
+        21: "Frenzied Runner",
         22: "Silence Suzuka"
     };
-    const effTDData = {
+
+    const DETAIL_MAP = {
         1: "Front Runners",
         2: "Pace Chasers",
         3: "Late Surgers",
@@ -709,367 +1005,561 @@
         5: "5 Closest Girls",
         10: "Rushing Enemy",
         18: "All Enemy Girls",
-        1002: "Silence Suzuka",
+        1002: "Silence Suzuka"
     };
-    
-    const reversedMap = {};
-    for (const [id, value] of Object.entries(typeMap)) {
-        let transformedKey;
-        if (Array.isArray(value)) {
-            const firstItem = value[0];
-            transformedKey = firstItem.split(' ')[0].toLowerCase();
-        } else {
-            transformedKey = value.toLowerCase().replace(/ /g, '_');
-        }
-        reversedMap[transformedKey] = parseInt(id, 10);
+
+    const RARITY_MAP = {
+        1: "Normal",
+        2: "Gold",
+        3: "Unique",
+        4: "Gold Unique",
+        5: "Gold Unique"
+    };
+
+    const RARITY_CLASS = {
+        1: '',
+        2: 'rarity-gold',
+        3: 'rarity-unique',
+        4: 'rarity-uni-gold',
+        5: 'rarity-uni-gold'
+    };
+
+    const IGNORE_LIST = [1, 2, 3, 4, 5, 10, 13, 14];
+    const TIME_LIST = [13, 14];
+    const PERCENT_LIST = [29, 35];
+
+    // Build reverse lookup for type filter
+    const TYPE_LOOKUP = {};
+    for (const [id, value] of Object.entries(TYPE_MAP)) {
+        let key = Array.isArray(value) ? value[0].split(' ')[0].toLowerCase() : value.toLowerCase().replace(/ /g, '_');
+        TYPE_LOOKUP[key] = Number(id);
     }
-    const fn = (_) => Array.isArray(typeMap[_]) ? typeMap[_][0].split(" ")[0] : typeMap[_];
-    const checkType = (b) => reversedMap[b.toLowerCase()];
+
+    function getTypeLabel(type, value = 1) {
+        const idx = value > 0 ? 0 : 1;
+        const val = TYPE_MAP[type];
+        return Array.isArray(val) ? val[idx] : val || `Type ${type}`;
+    }
+
+    function getTypeId(label) {
+        return TYPE_LOOKUP[label.toLowerCase()];
+    }
+
+    // ============================================================
+    // 6. DATA LOADING - NEW PRIORITY ORDER
+    // ============================================================
     
-    // Populate type highlight dropdown
-    const selector = document.getElementById("typeHighlight");
-    selector.appendChild(new Option("All Types", "all"));
-    Object.entries(reversedMap).forEach(([s,_]) => selector.appendChild(new Option(fn(_), s)));
-    
-    // ======================== RENDER ENGINE (with search highlight) ========================
-    function renderSkillViewer(effectArray, options = {}) {
-        const mergedOptions = {
-            mode: options.mode || 'full',
-            highlightType: options.highlightType || 'all',
-            showEmptyGroups: options.showEmptyGroups || false,
-            searchTerm: options.searchTerm || ''
-        };
-        if (!effectArray || effectArray.length === 0) {
-            return `<div class="empty-state">🔍 No skills match your filters. Try different search term or clear filters.</div>`;
-        }
-        
-        // Apply type filter
-        let filteredByType = effectArray;
-        if (mergedOptions.highlightType !== 'all') {
-            const typeId = checkType(mergedOptions.highlightType);
-            if (typeId !== undefined) {
-                filteredByType = effectArray.filter(skill => {
-                    const groups = skill.condition_groups || [];
-                    return groups.some(g => (g.effects || []).some(e => e.type === Number(typeId)));
-                });
-            }
-        }
-        
-        if (filteredByType.length === 0) {
-            return `<div class="empty-state">⚠️ No skills match the selected type filter.</div>`;
-        }
-        
-        const defaultTypeLabel = (typeNum, typeVal = 1) => {
-            const h = typeVal > 0 ? 0 : 1;
-            if(Array.isArray(typeMap[typeNum])) return typeMap[typeNum][h];
-            else return typeMap[typeNum] || `Type ${typeNum}`;
-        };
-        const targetLabel = (num, val = 1) => {
-            const h = val > 0 ? 0 : 1;
-            const n = targetData;
-            if(Array.isArray(n[num])) return n[num][h];
-            else return n[num] || `Type ${num}`;
-        };
-        const effTDLabel = (num, val = 1) => {
-            const h = val > 0 ? 0 : 1;
-            const n = effTDData;
-            if(Array.isArray(n[num])) return n[num][h];
-            else return n[num] || `Type ${num}`;
-        };
-        const formatTime = (baseTime) => {
-            if (baseTime === -1) return '<span class="time-badge">Infinite</span>';
-            if (baseTime === 0) return '<span class="time-badge">Instant Effect</span>';
-            const seconds = (baseTime / 10000).toFixed(2);
-            return `<span class="time-badge">⏱️ ${seconds}s</span>`;
-        };
-        const formatCD = (cd) => {
-            if (!cd && cd !== 0) return '—';
-            const sec = (cd / 10000).toFixed(2);
-            return `${sec}s`;
-        };
-        const formatValue = (val, mode) => {
-            if (val === undefined || val === null) return '—';
-            const num = typeof val === 'number' ? val : parseFloat(val);
-            if (isNaN(num)) return val;
-            const actual = num / 10000;
-            if (mode === 'debug') return `${num} (${actual})`;
-            if (mode === 'compact') return actual.toFixed(2);
-            return actual;
-        };
-        
-        // Helper to highlight search term in name
-        function highlightName(name, term) {
-            if (!term || term.length === 0) return escapeHtml(name);
-            const escapedName = escapeHtml(name);
-            const escapedTerm = escapeHtml(term);
-            const regex = new RegExp(`(${escapedTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
-            return escapedName.replace(regex, `<span class="search-highlight">$1</span>`);
-        }
-        
-        let cardsHtml = '';
-        for (let idx = 0; idx < filteredByType.length; idx++) {
-            const skill = filteredByType[idx];
-            const rawName = skill.name_en || skill.enname || `Skill_${idx}`;
-            const nameEn = highlightName(rawName, mergedOptions.searchTerm);
-            const groups = skill.condition_groups || [];
-            const rare = skill.rarity || 1;
-            function checkRare(t) {
-                const rpx = { 1: "", 2: "gold_grad", 3: "unique", 4: "uni_gold", 5: "uni_gold" };
-                return rpx[Number(t)] || "";
-            }
-            const rarityMap = { 2: "Gold Skill", 3: "Unique Skill", 4: "Gold Unique Skill", 5: "Gold Unique Skill" };
-            let bannerType = checkRare(rare);
-            let groupsHtml = '';
-            for (let gIdx = 0; gIdx < groups.length; gIdx++) {
-                const group = groups[gIdx];
-                const baseTime = group.base_time;
-                const cd = group.cd;
-                const effects = group.effects || [];
-                let effectsHtml = '';
-                for (let eIdx = 0; eIdx < effects.length; eIdx++) {
-                    const eff = effects[eIdx];
-                    const effType = eff.type;
-                    const effValue = eff.value;
-                    const effTarget = eff.target;
-                    const effTD = eff.target_details;
-                    const typeLabel = defaultTypeLabel(effType, effValue);
-                    const effectClass = (effValue > 0) ? 'effect-type-green' : 'effect-type-yellow';
-                    let valueStr = formatValue(effValue, mergedOptions.mode);
-                    valueStr = `${valueStr}${(!ignoreList.includes(effType)) ? ` (${(100 * valueStr).toFixed(1)}%)` : ""}`;
-                    valueStr = `${valueStr}${(timeList.includes(effType)) ? "s" : ""}`;
-                    valueStr = `${valueStr}${(percentList.includes(effType)) ? "%" : ""}`;
-                    let targetStr = (effTarget !== undefined && effTarget !== null) ? `<strong>Target:</strong> ${targetLabel(effTarget)}` : '';
-                    let detail = (effTD !== undefined && effTD !== null) ? `<strong>Detail:</strong> ${effTDLabel(effTD)}` : '';
-                    if(effValue < 0) bannerType = "dbf";
-                    effectsHtml += `
-                        <div class="effect-item ${effectClass}">
-                            <div><strong>${typeLabel}</strong></div>
-                            <div class="d-flex" style="display:flex; gap:1rem; flex-wrap:wrap; margin-top:0.25rem;">
-                                <span><strong>📊 Value: </strong> <code>${valueStr}</code></span>
-                                ${targetStr ? `<span>🎯 ${targetStr}</span>` : ''}
-                                ${detail ? `<span>📌 ${detail}</span>` : ''}
-                                ${mergedOptions.mode === 'debug' ? `<span>🔧 raw type: ${effType}</span>` : ''}
-                            </div>
-                        </div>
-                    `;
+    /**
+     * Priority order:
+     * 1. SKL from cat.js (dynamic URL - most up-to-date)
+     * 2. skillData from skill.js (local fallback)
+     * 3. Show error asking user to contact admin
+     */
+    async function loadSkills() {
+        if (state.isLoading) return;
+        state.isLoading = true;
+        state.hasError = false;
+        showLoading();
+
+        try {
+            // ===== PRIORITY 1: Check for SKL from cat.js =====
+            if (window.SKL) {
+                console.log('📡 Found SKL in cat.js, fetching from:', window.SKL);
+                state.sourceUrl = window.SKL;
+                const success = await fetchFromUrl(window.SKL);
+                if (success) {
+                    state.sourceType = 'skl-remote';
+                    updateSourceBadge();
+                    dom.urlInput.value = window.SKL;
+                    dom.urlStatus.textContent = `✅ Loaded from SKL: ${window.SKL}`;
+                    return;
                 }
-                groupsHtml += `
-                    <div class="condition-group">
-                        <div class="group-header">⚙️ Condition Group ${gIdx+1}</div>
-                        <div class="info-row">
-                            <span class="info-label">⏲️ Base Duration:</span>
-                            <span class="info-value">${formatTime(baseTime)}</span>
-                            ${!cd ? "" : `<span class="info-label">⏳ Cooldown:</span><span class="info-value">${formatCD(cd)}</span>`}
-                        </div>
-                        ${effectsHtml || '<div class="small text-muted" style="padding:0.4rem;">No effects in this group</div>'}
-                    </div>
-                `;
+                // If fetch fails, continue to fallback
+                console.warn('⚠️ SKL fetch failed, trying skill.js fallback');
             }
-            cardsHtml += `
-                <div class="skill-card ${bannerType}" data-skill-idx="${idx}">
-                    <div class="skill-name">
-                        <span class="skill-name-en">📖 ${nameEn}</span>
-                        <span class="skill-badge">${rarityMap[rare] || "Normal Skill"}</span>
-                    </div>
-                    ${groupsHtml || '<div class="condition-group"><div class="small text-muted p-3">No condition groups defined</div></div>'}
-                </div>
-            `;
-        }
-        setTimeout(() => {
-            const statsDiv = document.getElementById('statsDisplay');
-            if (statsDiv) {
-                const sourceNote = usingLocalFallback ? " (📁 local)" : " (🌐 remote)";
-                const searchNote = currentSearchTerm ? ` 🔍 "${currentSearchTerm}"` : "";
-                statsDiv.innerHTML = `📚 ${filteredByType.length} / ${currentSkillArray.length} skills${sourceNote}${searchNote}`;
+
+            // ===== PRIORITY 2: Check for skillData from skill.js =====
+            if (window.skillData && Array.isArray(window.skillData) && window.skillData.length > 0) {
+                console.log('📁 Using local skillData from skill.js');
+                processLoadedData(window.skillData, 'local-fallback');
+                dom.sourceUrl = '';
+                dom.urlInput.value = '';
+                dom.urlStatus.textContent = '📦 Using local skillData from skill.js (fallback)';
+                return;
             }
-        }, 0);
-        return cardsHtml;
-    }
-    
-    function escapeHtml(str) {
-        if (!str) return '';
-        return str.replace(/[&<>]/g, function(m) {
-            if (m === '&') return '&amp;';
-            if (m === '<') return '&lt;';
-            if (m === '>') return '&gt;';
-            return m;
-        });
-    }
-    
-    // ========== PRIORITY LOADER: OLD FALLBACK (window.skillData) FIRST ==========
-    function loadFromLocalSkillData() {
-        if (window.skillData && Array.isArray(window.skillData) && window.skillData.length > 0) {
-            console.log("✅ Using local fallback: window.skillData");
-            originalRawSkills = window.skillData.slice();
-            currentSkillArray = [...originalRawSkills];
-            usingLocalFallback = true;
-            const urlMsg = document.getElementById('urlStatusMsg');
-            if (urlMsg) urlMsg.innerHTML = `📦 Using LOCAL skillData (embedded).<br>Click "Load & Apply Remote" to override.`;
-            applyFiltersAndRender();
-            return true;
+
+            // ===== PRIORITY 3: Check localStorage cache =====
+            const cached = localStorage.getItem(CONFIG.storageKey);
+            if (cached) {
+                try {
+                    const data = JSON.parse(cached);
+                    if (data && data.length > 0) {
+                        console.log('💾 Using cached data from localStorage');
+                        processLoadedData(data, 'cache');
+                        dom.urlStatus.textContent = '💾 Using cached data (last successful load)';
+                        return;
+                    }
+                } catch (_) {}
+            }
+
+            // ===== ALL SOURCES FAILED =====
+            state.hasError = true;
+            state.sourceType = 'error';
+            showNoDataError();
+            updateStats(0);
+            updateSourceBadge();
+
+        } catch (err) {
+            console.error('Failed to load skills:', err);
+            state.hasError = true;
+            state.sourceType = 'error';
+            showNoDataError(err.message);
+            updateStats(0);
+            updateSourceBadge();
+        } finally {
+            state.isLoading = false;
         }
-        return false;
     }
-    
-    async function fetchSkillsFromUrl(url, showStatus = true) {
-        if (isLoading) return false;
-        isLoading = true;
-        const container = document.getElementById('skillContainer');
-        if (container && showStatus) container.innerHTML = `<div class="empty-state"><div class="loading-spinner" style="width:24px;height:24px;"></div> Loading skills from ${escapeHtml(url.substring(0, 70))}...</div>`;
+
+    async function fetchFromUrl(url) {
         try {
             const response = await fetch(url);
             if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
             const data = await response.json();
-            let skillArray = null;
-            if (Array.isArray(data)) skillArray = data;
-            else if (data.skills && Array.isArray(data.skills)) skillArray = data.skills;
-            else if (data.data && Array.isArray(data.data)) skillArray = data.data;
-            else throw new Error("JSON does not contain an array of skills.");
-            const filteredSkills = skillArray.filter(x => x && (x.name_en != null || x.enname != null));
-            if (filteredSkills.length === 0) throw new Error("No valid skills found.");
-            originalRawSkills = filteredSkills;
-            currentSkillArray = [...originalRawSkills];
-            currentActiveUrl = url;
-            usingLocalFallback = false;
-            localStorage.setItem('uma_skills_custom', JSON.stringify(currentSkillArray));
-            localStorage.setItem('uma_last_url', url);
-            applyFiltersAndRender();
-            if (showStatus && document.getElementById('urlStatusMsg')) {
-                document.getElementById('urlStatusMsg').innerHTML = `✅ Loaded ${currentSkillArray.length} skills from:<br> ${escapeHtml(url)}`;
-            }
+            
+            let skills = null;
+            if (Array.isArray(data)) skills = data;
+            else if (data.skills && Array.isArray(data.skills)) skills = data.skills;
+            else if (data.data && Array.isArray(data.data)) skills = data.data;
+            else throw new Error('Invalid JSON structure - expected array or {skills: []}');
+            
+            // Filter valid skills
+            skills = skills.filter(s => s && (s.name_en || s.enname));
+            
+            if (skills.length === 0) throw new Error('No valid skills found in the data');
+            
+            // Cache for future use
+            localStorage.setItem(CONFIG.storageKey, JSON.stringify(skills));
+            localStorage.setItem(CONFIG.urlStorageKey, url);
+            
+            processLoadedData(skills, 'remote');
             return true;
+            
         } catch (err) {
-            console.error(err);
-            if (container && showStatus) container.innerHTML = `<div class="empty-state">❌ Failed: ${escapeHtml(url)}<br>${err.message}<br><button id="retryDefaultBtn" style="margin-top:1rem;">↻ Reset to Default</button></div>`;
-            const retryBtn = document.getElementById('retryDefaultBtn');
-            if (retryBtn) retryBtn.onclick = () => loadDefaultRemoteSkills();
+            console.error(`Failed to fetch from ${url}:`, err);
             return false;
-        } finally {
-            isLoading = false;
         }
     }
-    
-    async function loadDefaultRemoteSkills() {
-        const defaultUrl = "https://gametora.com/data/umamusume/skills.528f3ead.json";
-        document.getElementById('customUrlInput').value = defaultUrl;
-        await fetchSkillsFromUrl(defaultUrl, true);
-    }
-    
-    async function initializeWithFallback() {
-        if (loadFromLocalSkillData()) return;
-        const savedUrl = localStorage.getItem('uma_last_url');
-        const cachedData = localStorage.getItem('uma_skills_custom');
-        if (savedUrl && cachedData) {
-            try {
-                const parsed = JSON.parse(cachedData);
-                if (parsed && parsed.length) {
-                    originalRawSkills = parsed;
-                    currentSkillArray = [...originalRawSkills];
-                    currentActiveUrl = savedUrl;
-                    usingLocalFallback = false;
-                    document.getElementById('customUrlInput').value = savedUrl;
-                    applyFiltersAndRender();
-                    return;
-                }
-            } catch(e) {}
-        }
-        await fetchSkillsFromUrl("https://gametora.com/data/umamusume/skills.528f3ead.json", true);
-    }
-    
-    // Apply search + type filters and re-render
-    function applyFiltersAndRender() {
-        if (!currentSkillArray.length) return;
-        let filtered = currentSkillArray;
-        if (currentSearchTerm && currentSearchTerm.trim().length > 0) {
-            filtered = filterSkillsByFuzzySearch(currentSkillArray, currentSearchTerm);
-        }
-        filteredSkillArray = filtered;
-        const mode = document.getElementById('displayMode').value;
-        const highlight = document.getElementById('typeHighlight').value;
-        const html = renderSkillViewer(filteredSkillArray, {
-            mode: mode,
-            highlightType: highlight,
-            searchTerm: currentSearchTerm
-        });
-        document.getElementById('skillContainer').innerHTML = html;
-        
-        // Update clear button visibility
-        const clearBtn = document.getElementById('clearSearchBtn');
-        if (clearBtn) clearBtn.style.display = currentSearchTerm ? 'block' : 'none';
-    }
-    
-    // ======================== EVENT HANDLERS ========================
-    const searchInput = document.getElementById('skillSearch');
-    const clearSearchBtn = document.getElementById('clearSearchBtn');
-    
-    function handleSearch() {
-        currentSearchTerm = searchInput.value;
-        applyFiltersAndRender();
-    }
-    
-    searchInput.addEventListener('input', handleSearch);
-    clearSearchBtn.addEventListener('click', () => {
-        searchInput.value = '';
-        currentSearchTerm = '';
-        applyFiltersAndRender();
-        searchInput.focus();
-    });
-    
-    document.getElementById('refreshBtn').addEventListener('click', () => {
-        if (currentSkillArray.length) applyFiltersAndRender();
-        else if (!usingLocalFallback) fetchSkillsFromUrl(currentActiveUrl, true);
-        else applyFiltersAndRender();
-    });
-    document.getElementById('displayMode').addEventListener('change', () => applyFiltersAndRender());
-    document.getElementById('typeHighlight').addEventListener('change', () => applyFiltersAndRender());
-    
-    // Popout logic
-    const overlay = document.getElementById('urlPopoutOverlay');
-    const urlSettingsBtn = document.getElementById('urlSettingsBtn');
-    const closePopout = document.getElementById('closePopoutBtn');
-    const cancelBtn = document.getElementById('cancelUrlBtn');
-    const applyBtn = document.getElementById('applyUrlBtn');
-    const customUrlInput = document.getElementById('customUrlInput');
-    
-    function openPopout() { overlay.classList.add('active'); }
-    function closePopoutFunc() { overlay.classList.remove('active'); }
-    urlSettingsBtn.addEventListener('click', openPopout);
-    closePopout.addEventListener('click', closePopoutFunc);
-    cancelBtn.addEventListener('click', closePopoutFunc);
-    overlay.addEventListener('click', (e) => { if(e.target === overlay) closePopoutFunc(); });
-    
-    applyBtn.addEventListener('click', async () => {
-        let newUrl = customUrlInput.value.trim();
-        if (!newUrl) { alert("Please enter a valid URL"); return; }
-        if (!newUrl.startsWith('http://') && !newUrl.startsWith('https://')) {
-            newUrl = 'https://' + newUrl;
-            customUrlInput.value = newUrl;
-        }
-        closePopoutFunc();
-        await fetchSkillsFromUrl(newUrl, true);
-    });
-    
-    initializeWithFallback();
 
-    // Dark Mode Toggle
-    const darkModeToggle = document.getElementById('darkModeToggle');
-    if (darkModeToggle) {
-        // Check localStorage for saved preference
-        const savedMode = localStorage.getItem('darkMode');
-        if (savedMode === 'enabled') {
-            document.body.classList.add('dark-mode');
-            darkModeToggle.textContent = '☀️ Light Mode';
-        } else {
-            darkModeToggle.textContent = '🌙 Dark Mode';
-        }
+    function processLoadedData(skills, sourceType) {
+        state.allSkills = skills;
+        state.sourceType = sourceType;
+        state.hasError = false;
         
-        darkModeToggle.addEventListener('click', () => {
-            document.body.classList.toggle('dark-mode');
-            const isDark = document.body.classList.contains('dark-mode');
-            localStorage.setItem('darkMode', isDark ? 'enabled' : 'disabled');
-            darkModeToggle.textContent = isDark ? '☀️ Light Mode' : '🌙 Dark Mode';
-        });
+        // Update UI
+        populateTypeFilter();
+        applyFiltersAndRender();
+        updateSourceBadge();
     }
+
+    // ============================================================
+    // 7. ERROR HANDLING
+    // ============================================================
+    
+    function showNoDataError(detail = '') {
+        dom.container.innerHTML = `
+            <div class="empty-state">
+                <div class="icon">🚫</div>
+                <h3>No Skill Data Available</h3>
+                <p class="sub">Unable to load skill data from any source</p>
+                <div class="error-detail">
+                    <strong>Error Details:</strong><br>
+                    ${detail || 'All data sources failed to provide valid skill data'}
+                    <br><br>
+                    <strong>Please contact the administrator</strong>
+                    <br>
+                    <span style="font-size:0.75rem;opacity:0.7;">
+                        Sources checked: SKL (cat.js) → skillData (skill.js) → Cache
+                    </span>
+                </div>
+                <button onclick="loadSkills()" style="margin-top:1.5rem;">
+                    ⟳ Retry Loading
+                </button>
+                <button onclick="openPopoutManual()" style="margin-top:0.5rem;background:var(--text-muted);">
+                    🔗 Manually Enter URL
+                </button>
+            </div>
+        `;
+        
+        // Update stats badge
+        dom.skillCount.textContent = '0';
+        const badge = dom.sourceBadge;
+        badge.textContent = '❌ ERROR';
+        badge.classList.add('error');
+    }
+
+    // ============================================================
+    // 8. FILTERING & RENDERING
+    // ============================================================
+    
+    function applyFiltersAndRender() {
+        if (!state.allSkills.length) {
+            // If no data but no error yet, show loading/empty state
+            if (!state.hasError) {
+                dom.container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="icon">📭</div>
+                        <h3>No skills loaded</h3>
+                        <p class="sub">Waiting for data...</p>
+                    </div>
+                `;
+            }
+            updateStats(0);
+            return;
+        }
+
+        let filtered = [...state.allSkills];
+
+        // Apply search filter
+        if (state.searchTerm.trim()) {
+            const term = state.searchTerm.trim().toLowerCase();
+            filtered = filtered.filter(skill => {
+                const name = (skill.name_en || skill.enname || '').toLowerCase();
+                return fuzzyMatch(term, name) > 0.25;
+            });
+            // Sort by relevance
+            filtered.sort((a, b) => {
+                const nameA = (a.name_en || a.enname || '').toLowerCase();
+                const nameB = (b.name_en || b.enname || '').toLowerCase();
+                return fuzzyMatch(state.searchTerm, nameB) - fuzzyMatch(state.searchTerm, nameA);
+            });
+        }
+
+        // Apply type filter
+        if (state.filterType !== 'all') {
+            const typeId = getTypeId(state.filterType);
+            if (typeId !== undefined) {
+                filtered = filtered.filter(skill => {
+                    const groups = skill.condition_groups || [];
+                    return groups.some(g => 
+                        (g.effects || []).some(e => e.type === typeId)
+                    );
+                });
+            }
+        }
+
+        state.filteredSkills = filtered;
+        renderSkills(filtered);
+        updateStats(filtered.length);
+    }
+
+    function renderSkills(skills) {
+        if (!skills.length) {
+            dom.container.innerHTML = `
+                <div class="empty-state">
+                    <div class="icon">🔍</div>
+                    <h3>No matches found</h3>
+                    <p class="sub">Try adjusting your search or filters</p>
+                </div>
+            `;
+            return;
+        }
+
+        const mode = state.displayMode;
+        const searchTerm = state.searchTerm.trim();
+        let html = '';
+
+        for (const skill of skills) {
+            const name = skill.name_en || skill.enname || 'Unknown';
+            const rarity = skill.rarity || 1;
+            const rarityLabel = RARITY_MAP[rarity] || 'Normal';
+            const rarityClass = RARITY_CLASS[rarity] || '';
+            const groups = skill.condition_groups || [];
+
+            // Highlight search term
+            let displayName = escapeHtml(name);
+            if (searchTerm) {
+                const regex = new RegExp(`(${escapeHtml(searchTerm).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+                displayName = displayName.replace(regex, '<span class="search-highlight">$1</span>');
+            }
+
+            let groupsHtml = '';
+            for (let gi = 0; gi < groups.length; gi++) {
+                const group = groups[gi];
+                const effects = group.effects || [];
+                const baseTime = group.base_time;
+                const cd = group.cd;
+
+                let effectsHtml = '';
+                for (const eff of effects) {
+                    const type = eff.type;
+                    const value = eff.value;
+                    const target = eff.target;
+                    const detail = eff.target_details;
+
+                    const typeLabel = getTypeLabel(type, value);
+                    const isPositive = value > 0;
+                    const effectClass = isPositive ? 'effect-positive' : 'effect-negative';
+
+                    let valueStr = formatValue(value, mode, type);
+                    if (!IGNORE_LIST.includes(type)) valueStr += ` (${(100 * valueStr).toFixed(1)}%)`;
+                    if (TIME_LIST.includes(type)) valueStr += 's';
+                    if (PERCENT_LIST.includes(type)) valueStr += '%';
+
+                    let targetStr = target !== undefined && target !== null ? 
+                        `<span>🎯 ${TARGET_MAP[target] || target}</span>` : '';
+                    let detailStr = detail !== undefined && detail !== null ? 
+                        `<span>📌 ${DETAIL_MAP[detail] || detail}</span>` : '';
+
+                    effectsHtml += `
+                        <div class="effect-item ${effectClass}">
+                            <strong>${typeLabel}</strong>
+                            <div class="effect-detail">
+                                <span>📊 <code>${valueStr}</code></span>
+                                ${targetStr}
+                                ${detailStr}
+                                ${mode === 'debug' ? `<span>🔧 type: ${type}</span>` : ''}
+                            </div>
+                        </div>
+                    `;
+                }
+
+                const timeHtml = baseTime === -1 ? '∞' : 
+                    baseTime === 0 ? 'Instant' : 
+                    `${(baseTime / 10000).toFixed(2)}s`;
+
+                groupsHtml += `
+                    <div class="condition-group">
+                        <div class="group-header">
+                            ⚙️ Condition Group <span class="group-num">${gi + 1}</span>
+                        </div>
+                        <div class="info-row">
+                            <span><span class="info-label">⏲️ Duration:</span> <span class="time-badge">${timeHtml}</span></span>
+                            ${cd ? `<span><span class="info-label">⏳ Cooldown:</span> <span class="time-badge">${(cd / 10000).toFixed(2)}s</span></span>` : ''}
+                        </div>
+                        ${effectsHtml || '<div style="padding:0.4rem;color:var(--text-muted);font-size:0.8rem;">No effects</div>'}
+                    </div>
+                `;
+            }
+
+            html += `
+                <div class="skill-card ${rarityClass}">
+                    <div class="skill-name">
+                        <span class="skill-name-en">${displayName}</span>
+                        <span class="skill-badge">${rarityLabel}</span>
+                    </div>
+                    ${groupsHtml || '<div class="condition-group"><div style="padding:0.4rem;color:var(--text-muted);">No condition groups</div></div>'}
+                </div>
+            `;
+        }
+
+        dom.container.innerHTML = html;
+    }
+
+    function formatValue(val, mode, type) {
+        if (val === undefined || val === null) return '—';
+        const num = typeof val === 'number' ? val : parseFloat(val);
+        if (isNaN(num)) return val;
+        const actual = num / 10000;
+        if (mode === 'debug') return `${num} (${actual.toFixed(4)})`;
+        if (mode === 'compact') return actual.toFixed(2);
+        return actual;
+    }
+
+    // ============================================================
+    // 9. UI HELPERS
+    // ============================================================
+    
+    function showLoading() {
+        dom.container.innerHTML = `
+            <div class="empty-state">
+                <div class="spinner" style="margin:0 auto 1rem;"></div>
+                <h3>Loading skills...</h3>
+                <p class="sub">Fetching from data source</p>
+            </div>
+        `;
+    }
+
+    function updateStats(count) {
+        dom.skillCount.textContent = count || 0;
+    }
+
+    function updateSourceBadge() {
+        const badge = dom.sourceBadge;
+        badge.classList.remove('error');
+        
+        const labels = {
+            'skl-remote': '📡 SKL',
+            'remote': '🌐 Remote',
+            'local-fallback': '📁 Local',
+            'cache': '💾 Cache',
+            'error': '❌ Error',
+            'unknown': '❓ Unknown'
+        };
+        
+        badge.textContent = labels[state.sourceType] || state.sourceType || 'Unknown';
+    }
+
+    function populateTypeFilter() {
+        const select = dom.typeFilter;
+        select.innerHTML = '<option value="all">All Types</option>';
+        
+        if (!state.allSkills.length) return;
+        
+        const types = new Set();
+        for (const skill of state.allSkills) {
+            const groups = skill.condition_groups || [];
+            for (const group of groups) {
+                const effects = group.effects || [];
+                for (const eff of effects) {
+                    const label = getTypeLabel(eff.type, eff.value);
+                    const key = label.split(' ')[0].toLowerCase();
+                    types.add(key);
+                }
+            }
+        }
+
+        const sorted = Array.from(types).sort();
+        for (const key of sorted) {
+            let label = key;
+            for (const [id, val] of Object.entries(TYPE_MAP)) {
+                const name = Array.isArray(val) ? val[0] : val;
+                if (name.split(' ')[0].toLowerCase() === key) {
+                    label = name;
+                    break;
+                }
+            }
+            const option = document.createElement('option');
+            option.value = key;
+            option.textContent = label;
+            select.appendChild(option);
+        }
+    }
+
+    // ============================================================
+    // 10. EVENT HANDLERS
+    // ============================================================
+    
+    // Search with debounce
+    const handleSearch = debounce(() => {
+        state.searchTerm = dom.search.value;
+        dom.clearBtn.classList.toggle('visible', !!state.searchTerm);
+        applyFiltersAndRender();
+    }, 250);
+
+    dom.search.addEventListener('input', handleSearch);
+
+    dom.clearBtn.addEventListener('click', () => {
+        dom.search.value = '';
+        state.searchTerm = '';
+        dom.clearBtn.classList.remove('visible');
+        applyFiltersAndRender();
+        dom.search.focus();
+    });
+
+    // Display mode
+    dom.displayMode.addEventListener('change', () => {
+        state.displayMode = dom.displayMode.value;
+        applyFiltersAndRender();
+    });
+
+    // Type filter
+    dom.typeFilter.addEventListener('change', () => {
+        state.filterType = dom.typeFilter.value;
+        applyFiltersAndRender();
+    });
+
+    // Refresh
+    dom.refreshBtn.addEventListener('click', () => {
+        // Clear cache and reload
+        localStorage.removeItem(CONFIG.storageKey);
+        state.allSkills = [];
+        loadSkills();
+    });
+
+    // Dark mode
+    dom.darkToggle.addEventListener('click', () => {
+        state.isDark = !state.isDark;
+        document.documentElement.setAttribute('data-theme', state.isDark ? 'dark' : 'light');
+        dom.darkToggle.textContent = state.isDark ? '🌙 Dark' : '☀️ Light';
+        localStorage.setItem('uma_theme', state.isDark ? 'dark' : 'light');
+    });
+
+    // Popout modal
+    function openPopout() { dom.popout.classList.add('active'); }
+    function closePopout() { dom.popout.classList.remove('active'); }
+    window.openPopoutManual = openPopout; // For error state button
+
+    dom.urlBtn.addEventListener('click', openPopout);
+    dom.closePopout.addEventListener('click', closePopout);
+    dom.cancelUrl.addEventListener('click', closePopout);
+    dom.popout.addEventListener('click', (e) => {
+        if (e.target === dom.popout) closePopout();
+    });
+
+    dom.applyUrl.addEventListener('click', async () => {
+        let url = dom.urlInput.value.trim();
+        if (!url) {
+            dom.urlStatus.textContent = '⚠️ Please enter a valid URL';
+            return;
+        }
+        if (!url.startsWith('http://') && !url.startsWith('https://')) {
+            url = 'https://' + url;
+            dom.urlInput.value = url;
+        }
+        closePopout();
+        dom.urlStatus.textContent = '⏳ Loading...';
+        state.sourceUrl = url;
+        const success = await fetchFromUrl(url);
+        if (success) {
+            state.sourceType = 'remote';
+            dom.urlStatus.textContent = `✅ Loaded ${state.allSkills.length} skills from ${url}`;
+            updateSourceBadge();
+        } else {
+            dom.urlStatus.textContent = `❌ Failed to load from ${url}`;
+        }
+    });
+
+    // ============================================================
+    // 11. INITIALIZATION
+    // ============================================================
+    
+    async function init() {
+        // Restore theme
+        const savedTheme = localStorage.getItem('uma_theme');
+        if (savedTheme) {
+            state.isDark = savedTheme === 'dark';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            dom.darkToggle.textContent = state.isDark ? '🌙 Dark' : '☀️ Light';
+        }
+
+        // Restore URL from cache
+        const savedUrl = localStorage.getItem(CONFIG.urlStorageKey);
+        if (savedUrl) dom.urlInput.value = savedUrl;
+
+        // Load skills with new priority
+        await loadSkills();
+
+        // Show status
+        if (state.sourceUrl) {
+            dom.urlStatus.textContent = `📡 Using data source: ${state.sourceUrl}`;
+        } else if (state.sourceType === 'local-fallback') {
+            dom.urlStatus.textContent = '📦 Using local skillData from skill.js';
+        } else if (state.sourceType === 'cache') {
+            dom.urlStatus.textContent = '💾 Using cached data';
+        }
+    }
+
+    // Make loadSkills available globally for retry button
+    window.loadSkills = loadSkills;
+
+    // Start
+    init();
+
+    console.log(`⚡ Skill Viewer v2 initialized`);
+    console.log(`📚 Data source: ${state.sourceType}`);
+    console.log(`🔗 URL: ${state.sourceUrl || 'local'}`);
+    console.log(`📋 Priority: SKL (cat.js) → skillData (skill.js) → Error`);
 </script>
 </body>
 </html>
