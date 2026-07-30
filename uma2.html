@@ -1063,15 +1063,15 @@
 
         try {
             // ===== PRIORITY 1: Check for SKL from cat.js =====
-            if (window.SKL) {
-                console.log('📡 Found SKL in cat.js, fetching from:', window.SKL);
-                state.sourceUrl = window.SKL;
-                const success = await fetchFromUrl(window.SKL);
+            if (typeof(SKL) != "undefined") {
+                console.log('📡 Found SKL in cat.js, fetching from:', SKL);
+                state.sourceUrl = SKL;
+                const success = await fetchFromUrl(SKL);
                 if (success) {
                     state.sourceType = 'skl-remote';
                     updateSourceBadge();
                     dom.urlInput.value = window.SKL;
-                    dom.urlStatus.textContent = `✅ Loaded from SKL: ${window.SKL}`;
+                    dom.urlStatus.textContent = `✅ Loaded from SKL: ${SKL}`;
                     return;
                 }
                 // If fetch fails, continue to fallback
