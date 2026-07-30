@@ -3,956 +3,1449 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>Umamusume Pretty Derby (Global) Stat Calculator</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>Umamusume Stat Calculator</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700&display=swap" rel="stylesheet">
-
+    
     <style>
-        * { font-family: 'Inter', sans-serif; }
-        
-        /* Dark Mode Variables (default) */
+        /* ===== RESET & BASE ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         :root {
-            --bg-body: #0f172a;
-            --bg-card: #1e293b;
-            --bg-header: #334155;
-            --border-color: #475569;
-            --text-primary: #f1f5f9;
-            --text-secondary: #94a3b8;
-            --bg-min: #422c1a;
-            --bg-rec: #1a3a32;
-            --bg-opt: #1a334d;
-            --card-shadow: 0 8px 24px rgba(0,0,0,0.3);
-            --input-bg: #334155;
-            --input-border: #475569;
-            --skill-bg: #334155;
-            --skill-hover: #648cc5;
-            --alert-bg: #1e3a5f;
-            --alert-text: #b0d4ff;
-            --bg-light-custom: #334155;
+            --bg-body: #0a0a0a;
+            --bg-card: #141416;
+            --bg-card-hover: #1a1a1e;
+            --bg-input: #0d0d0f;
+            --text-primary: #f0f0f0;
+            --text-secondary: #777788;
+            --text-muted: #555566;
+            --border-color: #222228;
+            --border-active: #2a2a32;
+            --accent: #00d4ff;
+            --accent-dim: rgba(0, 212, 255, 0.15);
+            --accent-glow: 0 0 20px rgba(0, 212, 255, 0.15);
+            --font: 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            --radius: 6px;
         }
-        
-        /* Light Mode Class */
-        body.light-mode {
-            --bg-body: #eef2f7;
-            --bg-card: #ffffff;
-            --bg-header: #f8fafd;
-            --border-color: #e9edf2;
-            --text-primary: #1e293b;
-            --text-secondary: #475569;
-            --bg-min: #fffaf5;
-            --bg-rec: #f0fdf9;
-            --bg-opt: #f0f6fe;
-            --card-shadow: 0 8px 24px rgba(0,0,0,0.05);
-            --input-bg: #ffffff;
-            --input-border: #cbd5e1;
-            --skill-bg: #eef2ff;
-            --skill-hover: #cddff5;
-            --alert-bg: #e8f0fe;
-            --alert-text: #1e3a5f;
-            --bg-light-custom: #f8fafc;
+
+        html {
+            font-size: 16px;
+            scroll-behavior: smooth;
         }
-        
+
         body {
             background: var(--bg-body);
-            padding-bottom: 3rem;
             color: var(--text-primary);
-            transition: background 0.3s ease, color 0.2s ease;
+            font-family: var(--font);
+            padding: 2rem 1rem 5rem;
+            min-height: 100vh;
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
         }
-        
-        .card-premium {
-            background: var(--bg-card);
-            border-radius: 1.5rem;
-            border: 1px solid var(--border-color);
-            box-shadow: var(--card-shadow);
-            margin-bottom: 1.5rem;
-            overflow: hidden;
-            transition: background 0.3s ease, border 0.2s ease;
+
+        /* ===== SCROLLBAR ===== */
+        ::-webkit-scrollbar {
+            width: 4px;
+            height: 4px;
         }
-        
-        .card-header-custom {
-            background: var(--bg-header);
-            padding: 1rem 1.5rem;
+        ::-webkit-scrollbar-track {
+            background: var(--bg-body);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--accent);
+            border-radius: 2px;
+        }
+
+        /* ===== CONTAINER ===== */
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        /* ===== HEADER ===== */
+        .site-header {
+            margin-bottom: 2.5rem;
+            padding-bottom: 1.5rem;
             border-bottom: 1px solid var(--border-color);
-            font-weight: 700;
-            font-size: 1.1rem;
-            color: var(--text-primary);
+            position: relative;
         }
-        
-        .stat-tier-card {
-            border-radius: 1rem;
-            padding: 1rem;
-            height: 100%;
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-            transition: background 0.3s ease;
+
+        .site-header::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            width: 80px;
+            height: 2px;
+            background: var(--accent);
+            box-shadow: var(--accent-glow);
         }
-        
-        .bg-min {
-            border-left: 5px solid #f4a261;
-            background: var(--bg-min);
-        }
-        
-        .bg-rec {
-            border-left: 5px solid #2a9d8f;
-            background: var(--bg-rec);
-        }
-        
-        .bg-opt {
-            border-left: 5px solid #1e6091;
-            background: var(--bg-opt);
-        }
-        
-        .stat-value-lg {
+
+        .site-title {
             font-size: 1.6rem;
-            font-weight: 800;
-            line-height: 1.2;
-            color: var(--text-primary);
-        }
-        
-        .stat-label-sm {
-            font-size: 0.65rem;
-            text-transform: uppercase;
-            font-weight: 600;
-            color: var(--text-secondary);
-            letter-spacing: 0.5px;
-        }
-        
-        .stat-label-lg {
-            font-size: 0.8rem;
-            font-weight: 600;
-            color: var(--text-secondary);
-        }
-        
-        .skill-container {
-            overflow-y: auto;
-            border: 1px solid var(--border-color);
-            border-radius: 1rem;
-            padding: 0.75rem;
-            background: var(--bg-card);
-        }
-        
-        .skill-badge {
-            display: inline-block;
-            background: var(--skill-bg);
-            border-radius: 30px;
-            padding: 12px 16px;
-            margin: 3px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: 0.1s;
-            color: var(--text-primary);
-            font-size: 1rem;
-        }
-        
-        .skill-badge:hover {
-            background: var(--skill-hover);
-        }
-        
-        .skill-badge-gold {
-            background: #006fc073;
-        }
-        
-        .skill-active {
-            background: #00c2287a;
-            color: white;
-        }
-        
-        .apt-select, .form-select, .form-control {
-            background-color: var(--input-bg);
-            border-color: var(--input-border);
-            color: var(--text-primary);
-        }
-        
-        .apt-select option {
-            background-color: var(--input-bg);
-            color: var(--text-primary);
-        }
-        
-        .form-control:focus, .form-select:focus {
-            border-color: #1e6091;
-            box-shadow: 0 0 0 0.2rem rgba(30,96,145,0.25);
-        }
-        
-        .comparison-up {
-            color: #4ade80;
-            font-weight: 600;
-        }
-        
-        .comparison-down {
-            color: #f87171;
-            font-weight: 600;
-        }
-        
-        .badge-apt-custom {
-            background: var(--skill-bg);
-            border-radius: 30px;
-            padding: 0.2rem 0.7rem;
-            font-size: 0.7rem;
-            color: var(--text-primary);
-        }
-        
-        hr {
-            opacity: 0.2;
-            border-color: var(--border-color);
-        }
-        
-        .insight-text {
-            font-size: 0.8rem;
-        }
-        
-        .text-secondary, .small.text-secondary {
-            color: var(--text-secondary) !important;
-        }
-        
-        .bg-light {
-            background-color: var(--bg-light-custom) !important;
-        }
-        
-        .alert-info {
-            background-color: var(--alert-bg);
-            border-color: var(--border-color);
-            color: var(--alert-text);
-        }
-        
-        .btn-outline-primary {
-            color: var(--text-primary);
-            border-color: #1e6091;
-        }
-        
-        .btn-outline-primary:hover {
-            background-color: #1e6091;
-            border-color: #1e6091;
-            color: white;
-        }
-        
-        .form-label {
-            color: var(--text-primary);
-        }
-        
-        /* Dark mode toggle button */
-        .dark-mode-toggle {
-            position: fixed;
-            bottom: 2rem;
-            right: 2rem;
-            z-index: 1000;
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 50px;
-            padding: 0.6rem 1.2rem;
-            font-weight: 600;
-            cursor: pointer;
-            box-shadow: var(--card-shadow);
-            transition: all 0.2s ease;
-            color: var(--text-primary);
+            font-weight: 700;
+            letter-spacing: -0.5px;
             display: flex;
             align-items: center;
+            gap: 0.6rem;
+        }
+
+        .site-title i {
+            color: var(--accent);
+            font-size: 1.4rem;
+        }
+
+        .site-sub {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            font-weight: 300;
+            margin-top: 2px;
+            letter-spacing: 0.3px;
+        }
+
+        /* ===== LED CARD ===== */
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            margin-bottom: 1.5rem;
+            overflow: hidden;
+            transition: border-color 0.2s;
+        }
+
+        .card:hover {
+            border-color: var(--border-active);
+        }
+
+        .card-header {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            font-weight: 600;
+            font-size: 0.9rem;
+            letter-spacing: 0.2px;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+            position: relative;
+        }
+
+        .card-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, var(--accent), transparent 70%);
+            box-shadow: var(--accent-glow);
+            opacity: 0.6;
+        }
+
+        .card-header i {
+            color: var(--accent);
+            font-size: 1rem;
+        }
+
+        .card-body {
+            padding: 1.5rem;
+        }
+
+        /* ===== FORM ELEMENTS ===== */
+        .form-group {
+            margin-bottom: 0.8rem;
+        }
+
+        .form-group.row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.8rem 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.75rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-secondary);
+            margin-bottom: 0.25rem;
+        }
+
+        select, input[type="number"] {
+            width: 100%;
+            padding: 0.5rem 0.75rem;
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            color: var(--text-primary);
+            font-family: var(--font);
+            font-size: 0.9rem;
+            font-weight: 400;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            outline: none;
+            -moz-appearance: textfield;
+        }
+
+        select::-ms-expand {
+            display: none;
+        }
+
+        select {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23777788'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.75rem center;
+            padding-right: 2.2rem;
+            cursor: pointer;
+        }
+
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+        }
+
+        select:focus, input[type="number"]:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-dim);
+        }
+
+        select option {
+            background: var(--bg-card);
+            color: var(--text-primary);
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 0.6rem 1.2rem;
+        }
+
+        .form-grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.6rem 1.5rem;
+        }
+
+        @media (max-width: 600px) {
+            .form-grid-2 {
+                grid-template-columns: 1fr;
+            }
+            .form-group.row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* ===== STAT CARDS (Min/Rec/Opt) ===== */
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 0.6rem;
+        }
+
+        @media (max-width: 768px) {
+            .stat-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .stat-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        .stat-card {
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            padding: 0.6rem 0.8rem;
+            position: relative;
+            transition: border-color 0.2s;
+        }
+
+        .stat-card:hover {
+            border-color: var(--border-active);
+        }
+
+        .stat-card .stat-label {
+            font-size: 0.55rem;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+
+        .stat-card .stat-value {
+            font-size: 1.3rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .stat-card .stat-diff {
+            font-size: 0.7rem;
+            font-weight: 500;
+            margin-left: 0.2rem;
+        }
+
+        .stat-card .stat-diff.up {
+            color: #4ade80;
+        }
+        .stat-card .stat-diff.down {
+            color: #f87171;
+        }
+
+        .stat-card .stat-sub {
+            font-size: 0.55rem;
+            color: var(--text-muted);
+            margin-top: 0.1rem;
+        }
+
+        /* Accent borders on stat cards */
+        .stat-card.min {
+            border-left: 2px solid #f4a261;
+        }
+        .stat-card.rec {
+            border-left: 2px solid #4ade80;
+        }
+        .stat-card.opt {
+            border-left: 2px solid var(--accent);
+        }
+        .stat-card.user {
+            border-left: 2px solid var(--text-secondary);
+        }
+
+        /* ===== COMPARISON BOX ===== */
+        .comparison-box {
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            padding: 1rem 1.25rem;
+            margin-top: 1rem;
+            min-height: 60px;
+            font-size: 0.85rem;
+        }
+
+        .comparison-box .diff-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.3rem 1.2rem;
+        }
+
+        .comparison-box .diff-row span {
+            font-weight: 500;
+        }
+
+        .comparison-box .conclusion {
+            margin-top: 0.4rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        /* ===== SKILLS ===== */
+        .skill-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.4rem;
+            max-height: 320px;
+            overflow-y: auto;
+            padding: 0.2rem 0.2rem 0.4rem;
+        }
+
+        .skill-badge {
+            display: inline-block;
+            padding: 0.35rem 0.9rem;
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 450;
+            cursor: pointer;
+            transition: all 0.15s;
+            color: var(--text-secondary);
+            user-select: none;
+            font-family: var(--font);
+            letter-spacing: 0.2px;
+        }
+
+        .skill-badge:hover {
+            border-color: var(--text-secondary);
+            color: var(--text-primary);
+        }
+
+        .skill-badge.active {
+            background: var(--accent-dim);
+            border-color: var(--accent);
+            color: var(--accent);
+            box-shadow: 0 0 16px rgba(0, 212, 255, 0.08);
+        }
+
+        .skill-badge.gold {
+            border-color: #fbbf24;
+            color: #fbbf24;
+        }
+
+        .skill-badge.gold.active {
+            background: var(--accent-dim);
+            border-color: var(--accent);
+            color: var(--accent);
+            box-shadow: 0 0 16px rgba(0, 212, 255, 0.08);
+        }
+        
+        /* ===== LED DIVIDER ===== */
+        .led-divider {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin: 1.5rem 0;
+            position: relative;
+        }
+        
+        .led-divider .line {
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(90deg, var(--accent), transparent);
+            box-shadow: var(--accent-glow);
+            opacity: 0.7;
+        }
+        
+        .led-divider .line-right {
+            background: linear-gradient(270deg, var(--accent), transparent);
+        }
+        
+        .led-divider .line-full {
+            background: linear-gradient(90deg, var(--accent), var(--accent), transparent 70%);
+        }
+        
+        .led-divider .dot {
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background: var(--accent);
+            box-shadow: 0 0 12px rgba(0, 212, 255, 0.4);
+            flex-shrink: 0;
+        }
+        
+        .led-divider .label {
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+            font-weight: 500;
+            white-space: nowrap;
+            padding: 0 0.5rem;
+        }
+        
+        /* Divider with center text */
+        .led-divider .line-group {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            flex: 1;
+        }
+        
+        .led-divider .line-group .line {
+            flex: 1;
+        }
+        
+        /* Thin divider (no dot, just line) */
+        .led-divider.thin .line {
+            height: 1px;
+            opacity: 0.3;
+        }
+        
+        /* Thick divider (more prominent) */
+        .led-divider.thick .line {
+            height: 2px;
+            opacity: 0.7;
+        }
+        
+        /* Glowing divider (stronger glow) */
+        .led-divider.glow .line {
+            box-shadow: 0 0 30px rgba(0, 212, 255, 0.2);
+            opacity: 0.9;
+        }
+        
+        .led-divider.green .line {
+            background: linear-gradient(90deg, #4ade80, transparent);
+        }
+        .led-divider.green .dot {
+            background: #4ade80;
+            box-shadow: 0 0 12px rgba(74, 222, 128, 0.4);
+        }
+        
+        .led-divider.pink .line {
+            background: linear-gradient(90deg, #f472b6, transparent);
+        }
+        .led-divider.pink .dot {
+            background: #f472b6;
+            box-shadow: 0 0 12px rgba(244, 114, 182, 0.4);
+        }
+
+        .skill-stats {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem 1.5rem;
+            flex-wrap: wrap;
+            padding: 0.6rem 1rem;
+            background: var(--bg-input);
+            border-radius: var(--radius);
+            border: 1px solid var(--border-color);
+            margin-top: 0.8rem;
+            font-size: 0.85rem;
+        }
+
+        .skill-stats strong {
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        /* ===== BUTTONS ===== */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.4rem;
+            padding: 0.5rem 1.4rem;
+            background: transparent;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            color: var(--text-secondary);
+            font-family: var(--font);
+            font-size: 0.8rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            letter-spacing: 0.3px;
+        }
+
+        .btn:hover {
+            border-color: var(--text-secondary);
+            color: var(--text-primary);
+        }
+
+        .btn-accent {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .btn-accent:hover {
+            background: var(--accent-dim);
+            border-color: var(--accent);
+            color: var(--accent);
+            box-shadow: var(--accent-glow);
+        }
+
+        .btn-block {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 0.6rem;
+            flex-wrap: wrap;
+            margin-top: 0.8rem;
+        }
+
+        /* ===== ALERT ===== */
+        .alert {
+            padding: 0.7rem 1rem;
+            border-radius: var(--radius);
+            border: 1px solid var(--border-color);
+            background: var(--bg-input);
+            font-size: 0.82rem;
+            color: var(--text-secondary);
+            margin-top: 0.8rem;
+            display: none;
+        }
+
+        .alert.show {
+            display: block;
+        }
+
+        .alert i {
+            color: var(--accent);
+            margin-right: 0.4rem;
+        }
+
+        .alert strong {
+            color: var(--text-primary);
+        }
+
+        /* ===== FOOTER ===== */
+        .site-footer {
+            margin-top: 2.5rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
             gap: 0.5rem;
+            font-size: 0.75rem;
+            color: var(--text-muted);
         }
-        
-        .dark-mode-toggle:hover {
-            transform: scale(1.05);
+
+        .site-footer a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            border-bottom: 1px solid transparent;
+            transition: border-color 0.2s;
         }
-        
-        h1, .fw-bold {
-            color: var(--text-primary) !important;
+
+        .site-footer a:hover {
+            border-color: var(--accent);
+            color: var(--accent);
         }
-        
-        h1 i, .card-header-custom i {
-            color: inherit;
+
+        /* ===== RESPONSIVE TWEAKS ===== */
+        @media (max-width: 600px) {
+            body { padding: 1rem 0.75rem 4rem; }
+            .site-title { font-size: 1.2rem; }
+            .card-body { padding: 1rem; }
+            .card-header { padding: 0.75rem 1rem; font-size: 0.75rem; }
+            .stat-card .stat-value { font-size: 1.1rem; }
+            .skill-badge { font-size: 0.7rem; padding: 0.25rem 0.7rem; }
         }
-        
-        footer {
-            color: var(--text-secondary) !important;
+
+        /* ===== LOADING / ERROR ===== */
+        .status-msg {
+            padding: 0.6rem 1rem;
+            border-radius: var(--radius);
+            border: 1px solid var(--border-color);
+            font-size: 0.85rem;
+            color: var(--text-secondary);
         }
-        
-        .stat-tier-card.bg-light {
-            background: var(--bg-light-custom) !important;
+
+        .status-msg.error {
+            border-color: #f87171;
+            color: #f87171;
+            background: rgba(248, 113, 113, 0.05);
         }
+
+        .status-msg.success {
+            border-color: #4ade80;
+            color: #4ade80;
+            background: rgba(74, 222, 128, 0.05);
+        }
+
+        /* Utility */
+        .mt-1 { margin-top: 0.5rem; }
+        .mt-2 { margin-top: 1rem; }
+        .mb-1 { margin-bottom: 0.5rem; }
+        .gap-1 { gap: 0.5rem; }
+        .flex { display: flex; align-items: center; flex-wrap: wrap; }
     </style>
 
-    <script src="skill.js"></script>
+    <!-- skill.js fallback - will be ignored if not found -->
+    <script src="skill.js" onerror="console.log('skill.js not found, will use fallback')"></script>
+    <!-- cat.js with SKL variable -->
+    <script src="cat.js" onerror="console.log('cat.js not found')"></script>
+
     <script>
-    	window.skillData = (typeof skillData !== 'undefined') ? skillData : null;
+        // ============================================================
+        //  SKILL LOADING: Priority: SKL (cat.js) → skillData → error
+        // ============================================================
+        
+        // const SKL = "https://gametora.com/data/umamusume/skills.2ffb2002.json"
+
+        // Make sure the DOM is fully loaded before we start
+        document.addEventListener('DOMContentLoaded', function() {
+            
+            let skillData = null;
+            let staminaSkills = [];
+            let selectedRecoverySkills = [];
+            let isReady = false;
+
+            const user = {
+                spd: 100,
+                sta: 100,
+                pwr: 100,
+                gut: 100,
+                wit: 100
+            };
+
+            let currentMinStats = { spd: 0, sta: 0, pwr: 0, gut: 0, wit: 0 };
+            let currentRecStats = { spd: 0, sta: 0, pwr: 0, gut: 0, wit: 0 };
+
+            // ============================================================
+            //  DOM REFS
+            // ============================================================
+
+            const $ = id => document.getElementById(id);
+
+            const aptTurf = $('aptTurf');
+            const aptDirt = $('aptDirt');
+            const aptSprint = $('aptSprint');
+            const aptMile = $('aptMile');
+            const aptMedium = $('aptMedium');
+            const aptLong = $('aptLong');
+            const aptFront = $('aptFront');
+            const aptPace = $('aptPace');
+            const aptLate = $('aptLate');
+            const aptEnd = $('aptEnd');
+            const targetDist = $('targetDist');
+            const targetStyle = $('targetStyle');
+            const targetSurface = $('targetSurface');
+            const userSpd = $('userSpd');
+            const userSta = $('userSta');
+            const userPwr = $('userPwr');
+            const userGut = $('userGut');
+            const userWit = $('userWit');
+            const compareBtn = $('compareBtn');
+            const resetRecBtn = $('resetRec');
+            const minStatsEl = $('minStats');
+            const recStatsEl = $('recStats');
+            const optStatsEl = $('optStats');
+            const comparisonDetails = $('comparisonDetails');
+            const totalStaReduction = $('totalStaReduction');
+            const optimizerAlert = $('optimizerAlert');
+            const skillContainer = $('skillLibraryContainer');
+            const skillStatus = $('skillStatus');
+
+            // ============================================================
+            //  CORE FUNCTIONS
+            // ============================================================
+
+            function aptMultiplier(letter, type) {
+                const penalties = {
+                    surface: { S: 0.05, A: 0, B: -0.10, C: -0.20, D: -0.30, E: -0.50, F: -0.70, G: -0.90 },
+                    dist: { S: 0.05, A: 0, B: -0.10, C: -0.20, D: -0.40, E: -0.60, F: -0.80, G: -0.90 },
+                    style: { S: 0.10, A: 0, B: -0.15, C: -0.25, D: -0.40, E: -0.60, F: -0.80, G: -0.90 }
+                };
+                const p = penalties[type]?.[letter.toUpperCase()] || 0;
+                return 1 / (1 + p);
+            }
+
+            function getCombinedMultiplier(turfLetter, dirtLetter, distLetter, styleLetter, surface) {
+                // Use the correct surface aptitude based on what's selected
+                const surfaceApt = surface.toLowerCase() === 'dirt' ? dirtLetter : turfLetter;
+                const surfaceMult = aptMultiplier(surfaceApt, 'surface');
+                const distMult = aptMultiplier(distLetter, 'dist');
+                const styleMult = aptMultiplier(styleLetter, 'style');
+                return [surfaceMult, distMult, styleMult];
+            }
+
+            function getDistanceApt(distType) {
+                const map = {
+                    Sprint: aptSprint.value,
+                    Mile: aptMile.value,
+                    Medium: aptMedium.value,
+                    Long: aptLong.value
+                };
+                return map[distType] || 'B';
+            }
+
+            function getStyleApt(styleType) {
+                const map = {
+                    Front: aptFront.value,
+                    Pace: aptPace.value,
+                    Late: aptLate.value,
+                    End: aptEnd.value
+                };
+                return map[styleType] || 'B';
+            }
+
+            function aptitudeScore(letter) {
+                const scores = { S: 100, A: 80, B: 60, C: 40, D: 20, E: 10, F: 5, G: 0 };
+                // Use hasOwnProperty or in operator instead of || fallback
+                if (letter && letter.toUpperCase() in scores) {
+                    return scores[letter.toUpperCase()];
+                }
+                return 50; // fallback for unknown letters
+            }
+
+            function getBaseTargets(distance, style, surface) {
+                let minBase, recBase;
+                switch (distance) {
+                    case 'Sprint':
+                        minBase = { spd: 680, sta: 280, pwr: 480, gut: 250, wit: 250 };
+                        recBase = { spd: 880, sta: 380, pwr: 680, gut: 380, wit: 380 };
+                        break;
+                    case 'Mile':
+                        minBase = { spd: 760, sta: 400, pwr: 540, gut: 300, wit: 330 };
+                        recBase = { spd: 960, sta: 550, pwr: 740, gut: 440, wit: 500 };
+                        break;
+                    case 'Medium':
+                        minBase = { spd: 780, sta: 520, pwr: 580, gut: 350, wit: 380 };
+                        recBase = { spd: 980, sta: 720, pwr: 780, gut: 500, wit: 550 };
+                        break;
+                    case 'Long':
+                        minBase = { spd: 740, sta: 780, pwr: 600, gut: 400, wit: 430 };
+                        recBase = { spd: 940, sta: 980, pwr: 800, gut: 550, wit: 600 };
+                        break;
+                    default:
+                        minBase = { spd: 700, sta: 450, pwr: 550, gut: 320, wit: 360 };
+                        recBase = { spd: 900, sta: 650, pwr: 700, gut: 450, wit: 480 };
+                }
+
+                const styleFactor = { spd: 1, sta: 1, pwr: 1, gut: 1, wit: 1 };
+                if (style === 'Front') { styleFactor.spd = 1.18;
+                    styleFactor.sta = 1.02;
+                    styleFactor.pwr = 0.96;
+                    styleFactor.gut = 0.92;
+                    styleFactor.wit = 0.92; }
+                if (style === 'Pace') { styleFactor.spd = 1.08;
+                    styleFactor.sta = 1.0;
+                    styleFactor.pwr = 1.08;
+                    styleFactor.gut = 0.96;
+                    styleFactor.wit = 1.02; }
+                if (style === 'Late') { styleFactor.spd = 1.03;
+                    styleFactor.sta = 0.98;
+                    styleFactor.pwr = 1.14;
+                    styleFactor.gut = 0.96;
+                    styleFactor.wit = 1.05; }
+                if (style === 'End') { styleFactor.spd = 0.96;
+                    styleFactor.sta = 1.08;
+                    styleFactor.pwr = 1.1;
+                    styleFactor.gut = 1.08;
+                    styleFactor.wit = 1.0; }
+
+                const apply = (obj) => ({
+                    spd: Math.round(obj.spd * styleFactor.spd),
+                    sta: Math.round(obj.sta * styleFactor.sta),
+                    pwr: Math.round(obj.pwr * styleFactor.pwr),
+                    gut: Math.round(obj.gut * styleFactor.gut),
+                    wit: Math.round(obj.wit * styleFactor.wit)
+                });
+
+                let min = apply(minBase);
+                let rec = apply(recBase);
+
+                if (surface === 'Dirt') {
+                    min = { spd: Math.max(620, min.spd - 30), sta: min.sta, pwr: min.pwr + 50, gut: min.gut + 20, wit: min.wit };
+                    rec = { spd: Math.max(720, rec.spd - 20), sta: rec.sta, pwr: rec.pwr + 60, gut: rec.gut + 30, wit: rec.wit };
+                }
+
+                return { min, rec };
+            }
+
+            function applyAptitude(base, turfApt, dirtApt, distAptLetter, styleAptLetter, surface) {
+                const [surfaceMult, distMult, styleMult] = getCombinedMultiplier(
+                    turfApt, 
+                    dirtApt,      // ← new parameter
+                    distAptLetter, 
+                    styleAptLetter, 
+                    surface       // ← new parameter
+                );
+                const adjustStat = (val, statType) => {
+                    if (statType === 'sta') return Math.round(val * distMult);
+                    if (statType === 'spd') return Math.round(val * Math.min(surfaceMult, distMult));
+                    if (statType === 'pwr') return Math.round(val * surfaceMult);
+                    if (statType === 'gut') return Math.round(val * styleMult);
+                    return Math.round(val * styleMult);
+                };
+
+                const adjustObj = (obj) => ({
+                    spd: adjustStat(obj.spd, 'spd'),
+                    sta: adjustStat(obj.sta, 'sta'),
+                    pwr: adjustStat(obj.pwr, 'pwr'),
+                    gut: adjustStat(obj.gut, 'gut'),
+                    wit: adjustStat(obj.wit, 'wit')
+                });
+
+                return { min: adjustObj(base.min), rec: adjustObj(base.rec) };
+            }
+
+            function getOptimizedDistance(targetStyle, targetSurface) {
+                const distances = ['Sprint', 'Mile', 'Medium', 'Long'];
+                let bestDist = 'Medium';
+                let bestScore = -1;
+                
+                // Use the correct surface aptitude based on target surface
+                const surfaceApt = targetSurface === 'Dirt' ? aptDirt.value : aptTurf.value;
+                const styleAptVal = getStyleApt(targetStyle);
+            
+                for (let d of distances) {
+                    const distApt = getDistanceApt(d);
+                    const surfaceScore = aptitudeScore(surfaceApt);
+                    const distScore = aptitudeScore(distApt);
+                    const styleScore = aptitudeScore(styleAptVal);
+                    const score = (surfaceScore + distScore + styleScore) / 3;
+                    
+                    // Debug - remove this line after testing
+                    // alert(`${d}: surface=${surfaceScore}, dist=${distScore}, style=${styleScore}, total=${score}`);
+                    
+                    if (score > bestScore) {
+                        bestScore = score;
+                        bestDist = d;
+                    }
+                }
+                return bestDist;
+            }
+
+            function getSkillStaminaReduction(skillName) {
+                const skill = staminaSkills.find(s => s.name_en === skillName);
+                if (!skill) return 0;
+                const effect = skill.condition_groups
+                    .flatMap(g => g.effects || [])
+                    .find(e => e.type === 9);
+                if (!effect) return 0;
+                const raw = effect.value / 1e4;
+                return Math.round(user.sta * raw);
+            }
+
+            function renderStatCard(container, stats, label, type) {
+                const names = { spd: 'SPD', sta: 'STA', pwr: 'PWR', gut: 'GUT', wit: 'WIT' };
+                const userStats = { spd: user.spd, sta: user.sta, pwr: user.pwr, gut: user.gut, wit: user.wit };
+                let html = '';
+                for (const [key, val] of Object.entries(stats)) {
+                    const diff = userStats[key] - val;
+                    const diffClass = diff >= 0 ? 'up' : 'down';
+                    const sign = diff >= 0 ? '+' : '';
+                    html += `
+                        <div class="stat-card ${type}">
+                            <div class="stat-label">${names[key]}</div>
+                            <div>
+                                <span class="stat-value">${val}</span>
+                                <span class="stat-diff ${diffClass}">(${sign}${diff})</span>
+                            </div>
+                            <div class="stat-sub">${label}</div>
+                        </div>
+                    `;
+                }
+                
+                container.innerHTML = html;
+            }
+
+            function refreshAll() {
+                if (!isReady) return;
+
+                const turfAptVal = aptTurf.value;
+                const dirtAptVal = aptDirt.value;
+                const targetDistVal = targetDist.value;
+                const targetStyleVal = targetStyle.value;
+                const targetSurfaceVal = targetSurface.value;
+                const styleAptVal = getStyleApt(targetStyleVal);
+                const distAptLetter = getDistanceApt(targetDistVal);
+
+                user.spd = parseInt(userSpd.value) || 1;
+                user.sta = parseInt(userSta.value) || 1;
+                user.pwr = parseInt(userPwr.value) || 1;
+                user.gut = parseInt(userGut.value) || 1;
+                user.wit = parseInt(userWit.value) || 1;
+
+                // Clamp values
+                user.spd = Math.max(1, Math.min(5000, user.spd));
+                user.sta = Math.max(1, Math.min(5000, user.sta));
+                user.pwr = Math.max(1, Math.min(5000, user.pwr));
+                user.gut = Math.max(1, Math.min(5000, user.gut));
+                user.wit = Math.max(1, Math.min(5000, user.wit));
+
+                const base = getBaseTargets(targetDistVal, targetStyleVal, targetSurfaceVal);
+                const aptAdjusted = applyAptitude(base, turfAptVal, dirtAptVal, distAptLetter, styleAptVal, targetSurfaceVal);
+
+                const totalRecovery = selectedRecoverySkills.reduce((acc, s) => acc + getSkillStaminaReduction(s), 0);
+                const finalMin = { ...aptAdjusted.min };
+                const finalRec = {
+                    spd: aptAdjusted.rec.spd,
+                    sta: Math.max(300, aptAdjusted.rec.sta - totalRecovery),
+                    pwr: aptAdjusted.rec.pwr,
+                    gut: aptAdjusted.rec.gut,
+                    wit: aptAdjusted.rec.wit
+                };
+
+                currentMinStats = finalMin;
+                currentRecStats = finalRec;
+
+                renderStatCard(minStatsEl, finalMin, 'Minimum', 'min');
+                renderStatCard(recStatsEl, finalRec, 'Recommended', 'rec');
+
+                // Optimized
+                const optDist = getOptimizedDistance(targetStyleVal, targetSurfaceVal);
+                const optBase = getBaseTargets(optDist, targetStyleVal, targetSurfaceVal);
+                const optDistApt = getDistanceApt(optDist);
+                const optAdjusted = applyAptitude(optBase, turfAptVal, dirtAptVal, optDistApt, styleAptVal, targetSurfaceVal);
+                const finalOpt = {
+                    spd: optAdjusted.rec.spd,
+                    sta: Math.max(300, optAdjusted.rec.sta - totalRecovery),
+                    pwr: optAdjusted.rec.pwr,
+                    gut: optAdjusted.rec.gut,
+                    wit: optAdjusted.rec.wit
+                };
+                renderStatCard(optStatsEl, finalOpt, 'Optimized', 'opt');
+
+                totalStaReduction.textContent = totalRecovery;
+
+                // Optimizer alert
+                if (optDist !== targetDistVal) {
+                    optimizerAlert.style.display = 'block';
+                    optimizerAlert.innerHTML =
+                        `<i class="bi bi-lightbulb"></i> Optimizer suggests using <strong>${optDist}</strong> distance instead of ${targetDistVal} — Your character has higher aptitude for ${optDist}.`;
+                } else {
+                    optimizerAlert.style.display = 'none';
+                }
+
+                compareStats();
+            }
+
+            function compareStats() {
+                if (!isReady) return;
+                
+                const rec = currentRecStats;
+                const userStats = {
+                    spd: parseInt(userSpd.value) || 1,
+                    sta: parseInt(userSta.value) || 1,
+                    pwr: parseInt(userPwr.value) || 1,
+                    gut: parseInt(userGut.value) || 1,
+                    wit: parseInt(userWit.value) || 1
+                };
+
+                const names = { spd: 'SPD', sta: 'STA', pwr: 'PWR', gut: 'GUT', wit: 'WIT' };
+                const diffRows = [];
+                let allMeet = true;
+
+                for (const [key, val] of Object.entries(rec)) {
+                    const diff = userStats[key] - val;
+                    const cls = diff >= 0 ? 'up' : 'down';
+                    const sign = diff >= 0 ? '+' : '';
+                    diffRows.push(
+                        `<span><strong>${names[key]}</strong> ${userStats[key]} / ${val} <span class="${cls}">(${sign}${diff})</span></span>`
+                    );
+                    if (diff < 0) allMeet = false;
+                }
+
+                const conclusion = allMeet ?
+                    '✅ All stats meet or exceed recommended. Strong build!' :
+                    '⚠️ Some stats below recommendations. Focus training on deficits.';
+
+                comparisonDetails.innerHTML = `
+                    <div class="diff-row">${diffRows.join('')}</div>
+                    <div class="led-divider">
+                        <div class="line"></div>
+                        <div class="dot"></div>
+                        <div class="line line-right"></div>
+                    </div>
+                    <div class="conclusion">${conclusion}</div>
+                `;
+            }
+
+            // ============================================================
+            //  SKILL LIBRARY UI
+            // ============================================================
+
+            function buildSkillLibrary() {
+                skillContainer.innerHTML = '';
+                if (!staminaSkills || staminaSkills.length === 0) {
+                    skillContainer.innerHTML =
+                        '<span style="color: var(--text-muted); font-size: 0.85rem;">No recovery skills loaded.</span>';
+                    return;
+                }
+
+                staminaSkills.forEach(skill => {
+                    const name = skill.name_en;
+                    const isActive = selectedRecoverySkills.includes(name);
+                    const isGold = skill.rarity && skill.rarity >= 2;
+                    const span = document.createElement('span');
+                    span.className = `skill-badge ${isActive ? 'active' : ''} ${isGold ? 'gold' : ''}`;
+                    span.textContent = name;
+                    span.onclick = () => {
+                        if (selectedRecoverySkills.includes(name)) {
+                            selectedRecoverySkills = selectedRecoverySkills.filter(s => s !== name);
+                        } else {
+                            selectedRecoverySkills.push(name);
+                        }
+                        buildSkillLibrary();
+                        refreshAll();
+                    };
+                    skillContainer.appendChild(span);
+                });
+            }
+
+            // ============================================================
+            //  SKILL FETCHING
+            // ============================================================
+
+            async function fetchSkills() {
+                skillStatus.textContent = 'Loading skills...';
+                skillStatus.className = 'status-msg';
+
+                try {
+                    // 1. Try SKL from cat.js
+                    if (typeof SKL !== 'undefined' && SKL) {
+                        console.log('Fetching from SKL:', SKL);
+                        const resp = await fetch(SKL);
+                        if (resp.ok) {
+                            const json = await resp.json();
+                            if (json && Array.isArray(json) && json.length) {
+                                skillData = json;
+                                skillStatus.textContent = '✓ Skills loaded from GameTora';
+                                skillStatus.className = 'status-msg success';
+                                processSkills();
+                                return;
+                            }
+                        }
+                    }
+
+                    // 2. Fallback: skill.js (window.skillData)
+                    if (typeof window.skillData !== 'undefined' && window.skillData && window.skillData.length) {
+                        skillData = window.skillData;
+                        skillStatus.textContent = '✓ Skills loaded from local fallback (skill.js)';
+                        skillStatus.className = 'status-msg success';
+                        processSkills();
+                        return;
+                    }
+
+                    // 3. All failed
+                    throw new Error('No skill data available');
+
+                } catch (e) {
+                    console.error('Skill load error:', e);
+                    skillStatus.textContent = '⚠️ Skill data unavailable. Please contact admin (Mikazuki) - the game may have updated.';
+                    skillStatus.className = 'status-msg error';
+                    staminaSkills = [];
+                    isReady = true;
+                    buildSkillLibrary();
+                    refreshAll();
+                }
+            }
+
+            function processSkills() {
+                if (!skillData || !Array.isArray(skillData)) {
+                    staminaSkills = [];
+                    isReady = true;
+                    buildSkillLibrary();
+                    refreshAll();
+                    return;
+                }
+
+                // Recovery skill list
+                const recoveryNames = [
+                    "Introduction to Physiology", "Clear Heart", "Super-Duper Stoked", "U=ma2", "Pure Heart",
+                    "Super-Duper Climax", "Swinging Maestro", "Corner Recovery ○", "Breath of Fresh Air",
+                    "Straightaway Recovery", "Iron Will", "Lay Low", "Indomitable", "Pace Strategy",
+                    "Unruffled", "Calm in a Crowd", "Calm and Collected", "Stamina to Spare", "Race Planner",
+                    "Preferred Position", "Sleeping Lion", "Standing By", "Wait-and-See", "Keen Eye",
+                    "Watchful Eye", "Trackblazer", "Rosy Outlook", "Cooldown", "Deep Breaths",
+                    "Adrenaline Rush", "Extra Tank", "Miraculous Step", "Soft Step", "Passing Pro",
+                    "Restless", "Moxie", "Gourmand", "Hydrate", "Relax", "A Small Breather",
+                    "Go-Home Specialist", "After-School Stroll", "Serenity", "Levelheaded", "Triple 7s",
+                    "Shake It Out", "Superior Heal", "Dazzl'n ♪ Diver", "Every Rose Has Its Fangs",
+                    "Lie in Wait", "Be Still", "VIP Pass", "Familiar Ground", "Cheers of a Fellow Dreamer",
+                    "Ready, Go!", "Go, Go, Mun!", "Of Calm Mind", "Free-Spirited", "Keep Pushing Ahead",
+                    "Master of the Sands", "Ignited Spirit STA", "Burning Spirit STA"
+                ];
+
+                staminaSkills = [];
+
+                skillData.forEach(skill => {
+                    if (!skill.condition_groups) return;
+                    const hasRecovery = skill.condition_groups.some(group =>
+                        group.effects && group.effects.some(e => e.type === 9)
+                    );
+                    if (hasRecovery && recoveryNames.includes(skill.name_en)) {
+                        staminaSkills.push(skill);
+                    }
+                });
+
+                // Sort alphabetically
+                staminaSkills.sort((a, b) => a.name_en.localeCompare(b.name_en));
+                
+                isReady = true;
+                buildSkillLibrary();
+                refreshAll();
+            }
+
+            // ============================================================
+            //  BIND EVENTS
+            // ============================================================
+
+            function bindEvents() {
+                const aptIds = ['aptTurf', 'aptDirt', 'aptSprint', 'aptMile', 'aptMedium', 'aptLong', 'aptFront', 'aptPace', 'aptLate', 'aptEnd', 'targetDist', 'targetStyle', 'targetSurface'];
+                aptIds.forEach(id => $(id).addEventListener('change', refreshAll));
+
+                compareBtn.addEventListener('click', refreshAll);
+
+                ['userSpd', 'userSta', 'userPwr', 'userGut', 'userWit'].forEach(id => {
+                    $(id).addEventListener('input', function() {
+                        let val = parseInt(this.value) || 1;
+                        if (val < 1) this.value = 1;
+                        if (val > 5000) this.value = 5000;
+                        refreshAll();
+                    });
+                });
+
+                resetRecBtn.addEventListener('click', () => {
+                    selectedRecoverySkills = [];
+                    buildSkillLibrary();
+                    refreshAll();
+                });
+            }
+
+            // ============================================================
+            //  INIT
+            // ============================================================
+
+            // Set default values
+            userSpd.value = 100;
+            userSta.value = 100;
+            userPwr.value = 100;
+            userGut.value = 100;
+            userWit.value = 100;
+
+            // Bind events
+            bindEvents();
+
+            // Start skill loading
+            fetchSkills();
+
+        }); // end DOMContentLoaded
     </script>
+
 </head>
 <body>
 
-<div class="container py-4">
-    <div class="text-center mb-4 position-relative">
-        <h1 class="fw-bold"><i class="bi bi-cpu me-2"></i>Umamusume Pretty Derby (Global) Calculator</h1>
-        <p class="text-secondary" >Full Aptitude Matrix · Smart Target Optimizer · Recovery Skill Modifier</p>
-    </div>
+    <div class="container">
 
-    <!-- Dark Mode Toggle Button -->
-    <div class="dark-mode-toggle" id="darkModeToggle">
-        <i class="bi bi-moon-fill"></i>
-        <span>Dark Mode</span>
-    </div>
+        <!-- HEADER -->
+        <header class="site-header">
+            <h1 class="site-title">
+                <i class="bi bi-cpu"></i>
+                Uma·Stat
+            </h1>
+            <div class="site-sub">Aptitude · Recovery · Optimizer</div>
+        </header>
 
-    <!-- 1. CHARACTER APTITUDES (Full Matrix) -->
-    <div class="card-premium">
-        <div class="card-header-custom"><i class="bi bi-person-vcard me-2"></i>1. Character Aptitudes (Your Uma's Base)</div>
-        <div class="p-4">
-            <div class="row g-3">
-                <div class="col-md-3">
-                    <label class="form-label fw-semibold">🌿 Turf</label>
-                    <select id="aptTurf" class="form-select apt-select">
-                    	<option value="S">S</option>
-                    	<option value="A">A</option>
-                    	<option value="B">B</option>
-                    	<option value="C">C</option>
-                    	<option value="D">D</option>
-                    	<option value="E">E</option>
-                    	<option value="F">F</option>
-                    	<option value="G" selected>G</option>
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label fw-semibold">🏜️ Dirt</label>
-                    <select id="aptDirt" class="form-select apt-select">
-                    	<option value="S">S</option>
-                    	<option value="A">A</option>
-                    	<option value="B">B</option>
-                    	<option value="C">C</option>
-                    	<option value="D">D</option>
-                    	<option value="E">E</option>
-                    	<option value="F">F</option>
-                    	<option value="G" selected>G</option>
-                    </select>
-                </div>
-            </div>
-            <hr>
-            <div class="row g-3">
-                <div class="col-md-3">
-                    <label class="form-label fw-semibold">⚡ Sprint</label>
-                    <select id="aptSprint" class="form-select apt-select">
-                    	<option value="S">S</option>
-                    	<option value="A">A</option>
-                    	<option value="B">B</option>
-                    	<option value="C">C</option>
-                    	<option value="D">D</option>
-                    	<option value="E">E</option>
-                    	<option value="F">F</option>
-                    	<option value="G" selected>G</option>
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label fw-semibold">🏅 Mile</label>
-                    <select id="aptMile" class="form-select apt-select">
-                    	<option value="S">S</option>
-                    	<option value="A">A</option>
-                    	<option value="B">B</option>
-                    	<option value="C">C</option>
-                    	<option value="D">D</option>
-                    	<option value="E">E</option>
-                    	<option value="F">F</option>
-                    	<option value="G" selected>G</option>
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label fw-semibold">⚖️ Medium</label>
-                    <select id="aptMedium" class="form-select apt-select">
-                    	<option value="S">S</option>
-                    	<option value="A">A</option>
-                    	<option value="B">B</option>
-                    	<option value="C">C</option>
-                    	<option value="D">D</option>
-                    	<option value="E">E</option>
-                    	<option value="F">F</option>
-                    	<option value="G" selected>G</option>
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label fw-semibold">🌀 Long</label>
-                    <select id="aptLong" class="form-select apt-select">
-                    	<option value="S">S</option>
-                    	<option value="A">A</option>
-                    	<option value="B">B</option>
-                    	<option value="C">C</option>
-                    	<option value="D">D</option>
-                    	<option value="E">E</option>
-                    	<option value="F">F</option>
-                    	<option value="G" selected>G</option>
-                    </select>
-                </div>
-            </div>
-            <hr>
-            <div class="row g-3">
-                <div class="col-md-3">
-                    <label class="form-label fw-semibold">🏃 Front</label>
-                    <select id="aptFront" class="form-select apt-select">
-                    	<option value="S">S</option>
-                    	<option value="A">A</option>
-                    	<option value="B">B</option>
-                    	<option value="C">C</option>
-                    	<option value="D">D</option>
-                    	<option value="E">E</option>
-                    	<option value="F">F</option>
-                    	<option value="G" selected>G</option>
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label fw-semibold">🚶 Pace</label>
-                    <select id="aptPace" class="form-select apt-select">
-                    	<option value="S">S</option>
-                    	<option value="A">A</option>
-                    	<option value="B">B</option>
-                    	<option value="C">C</option>
-                    	<option value="D">D</option>
-                    	<option value="E">E</option>
-                    	<option value="F">F</option>
-                    	<option value="G" selected>G</option>
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label fw-semibold">⏱️ Late</label>
-                    <select id="aptLate" class="form-select apt-select">
-                    	<option value="S">S</option>
-                    	<option value="A">A</option>
-                    	<option value="B">B</option>
-                    	<option value="C">C</option>
-                    	<option value="D">D</option>
-                    	<option value="E">E</option>
-                    	<option value="F">F</option>
-                    	<option value="G" selected>G</option>
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label fw-semibold">🔥 End</label>
-                    <select id="aptEnd" class="form-select apt-select">
-                    	<option value="S">S</option>
-                    	<option value="A">A</option>
-                    	<option value="B">B</option>
-                    	<option value="C">C</option>
-                    	<option value="D">D</option>
-                    	<option value="E">E</option>
-                    	<option value="F">F</option>
-                    	<option value="G" selected>G</option>
-                    </select>
-                </div>
-            </div>
-        </div>
-    </div>
+        <!-- SKILL STATUS -->
+        <div id="skillStatus" class="status-msg">Loading skills...</div>
 
-    <!-- 2. TARGET BUILD (Distance, Running Type, Surface) -->
-    <div class="card-premium">
-        <div class="card-header-custom"><i class="bi bi-bullseye me-2"></i>2. Target Build (What you want to achieve)</div>
-        <div class="p-4">
-            <div class="row g-3">
-                <div class="col-md-4">
-                    <label class="form-label fw-semibold">📏 Target Distance</label>
-                    <select id="targetDist" class="form-select">
-                        <option value="Sprint">Sprint (1200-1400m)</option>
-                        <option value="Mile" selected>Mile (1400-1800m)</option>
-                        <option value="Medium">Medium (1800-2400m)</option>
-                        <option value="Long">Long (2400m+)</option>
-                    </select>
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label fw-semibold">⚡ Target Running Style</label>
-                    <select id="targetStyle" class="form-select">
-                        <option value="Front">Front Runner</option>
-                        <option value="Pace" selected>Pace Chaser</option>
-                        <option value="Late">Late Surger</option>
-                        <option value="End">End Closer</option>
-                    </select>
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label fw-semibold">🌍 Surface</label>
-                    <select id="targetSurface" class="form-select">
-                        <option value="Turf" selected>Turf</option>
-                        <option value="Dirt">Dirt</option>
-                    </select>
-                </div>
-            </div>
-            <div id="optimizerAlert" class="alert alert-info mt-3 mb-0 small" style="display: none;"></div>
-        </div>
-    </div>
-
-    <!-- 3. STATS CALCULATOR: User Input, Minimum, Recommended, Optimized -->
-    <div class="card-premium">
-        <div class="card-header-custom"><i class="bi bi-table me-2"></i>3. Stats Calculator (with Recovery Modifier)</div>
-        <div class="p-4">
-            <div class="row g-4">
-                <!-- User Input Column -->
-                <div class="col-md-3">
-                    <div class="stat-tier-card bg-light">
-                        <div class="fw-bold mb-2"><i class="bi bi-pencil-square me-1"></i> Your Stats</div>
-                        <div>
-                        	<label class="stat-label-lg">SPD</label> 
-                        	<input type="number" id="userSpd" class="form-control form-control-lg" value="500">
+        <!-- 1. APTITUDES -->
+        <div class="card">
+            <div class="card-header"><i class="bi bi-person-vcard"></i> Aptitudes</div>
+            <div class="card-body">
+                <div class="form-group">
+                    <span class="form-label">Surface</span>
+                    <div class="form-grid-2">
+                        <div class="skill-stats">Turf
+                            <select id="aptTurf"><option value="S">S</option><option value="A" selected>A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option><option value="E">E</option><option value="F">F</option><option value="G">G</option></select>
                         </div>
-                        <div class="mt-2">
-                        	<label class="stat-label-lg">STA</label> 
-                        	<input type="number" id="userSta" class="form-control form-control-lg" value="500">
+                        <div class="skill-stats">Dirt
+                            <select id="aptDirt"><option value="S">S</option><option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option><option value="E">E</option><option value="F">F</option><option value="G" selected>G</option></select>
                         </div>
-                        <div class="mt-2">
-                        	<label class="stat-label-lg">PWR</label> 
-                        	<input type="number" id="userPwr" class="form-control form-control-lg" value="500">
-                        </div>
-                        <div class="mt-2">
-                        	<label class="stat-label-lg">GUT</label> 
-                        	<input type="number" id="userGut" class="form-control form-control-lg" value="500">
-                        </div>
-                        <div class="mt-2">
-                        	<label class="stat-label-lg">WIT</label> 
-                        	<input type="number" id="userWit" class="form-control form-control-lg" value="500">
-                        </div>
-                        <button id="compareBtn" class="btn btn-sm btn-outline-primary w-100 mt-3">
-                        	<i class="bi bi-arrow-repeat"></i> Refresh
-                        </button>
                     </div>
                 </div>
-                <!-- Minimum Column -->
-                <div class="col-md-3">
-                    <div class="stat-tier-card bg-min">
-                        <div class="fw-bold mb-2"><i class="bi bi-flag"></i> Minimum</div>
-                        <div id="minStats">—</div>
-                        <div class="small text-secondary mt-2">Barely functional</div>
+                <div class="led-divider thick glow green line-right"><div class="line line-full"></div></div>
+                <div class="form-group">
+                    <span class="form-label">Distance</span>
+                    <div class="form-grid">
+                        <div class="skill-stats">Sprint
+                            <select id="aptSprint">
+                            <option value="S">S</option>
+                                <option value="A">A</option>
+                                <option value="B">B</option>
+                                <option value="C" selected>C</option>
+                                <option value="D">D</option>
+                                <option value="E">E</option>
+                                <option value="F">F</option>
+                                <option value="G">G</option>
+                            </select>
+                        </div>
+                        <div class="skill-stats">Mile
+                            <select id="aptMile">
+                            <option value="S">S</option>
+                                <option value="A">A</option>
+                                <option value="B">B</option>
+                                <option value="C">C</option>
+                                <option value="D">D</option>
+                                <option value="E"selected>E</option>
+                                <option value="F">F</option>
+                                <option value="G">G</option>
+                            </select>
+                        </div>
+                        <div class="skill-stats">Medium
+                            <select id="aptMedium">
+                            <option value="S">S</option>
+                                <option value="A">A</option>
+                                <option value="B">B</option>
+                                <option value="C">C</option>
+                                <option value="D">D</option>
+                                <option value="E">E</option>
+                                <option value="F">F</option>
+                                <option value="G" selected>G</option>
+                            </select>
+                        </div>
+                        <div class="skill-stats">Long
+                            <select id="aptLong">
+                            <option value="S">S</option>
+                                <option value="A">A</option>
+                                <option value="B">B</option>
+                                <option value="C">C</option>
+                                <option value="D">D</option>
+                                <option value="E">E</option>
+                                <option value="F" selected>F</option>
+                                <option value="G">G</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
-                <!-- Recommended Column -->
-                <div class="col-md-3">
-                    <div class="stat-tier-card bg-rec">
-                        <div class="fw-bold mb-2"><i class="bi bi-star-fill text-success"></i> Recommended</div>
-                        <div id="recStats">—</div>
-                        <div class="small text-secondary mt-2">Target build baseline</div>
-                    </div>
-                </div>
-                <!-- Optimized Column (Smart) -->
-                <div class="col-md-3">
-                    <div class="stat-tier-card bg-opt">
-                        <div class="fw-bold mb-2"><i class="bi bi-gem"></i> Optimized</div>
-                        <div id="optStats">—</div>
-                        <div class="small text-secondary mt-2">Recomended target based on Style/Distance</div>
+                <div class="led-divider thick glow green line-right"><div class="line line-full"></div></div>
+                <div class="form-group">
+                    <span class="form-label">Style</span>
+                    <div class="form-grid">
+                        <div class="skill-stats">Front Runner
+                            <select id="aptFront">
+                            <option value="S">S</option>
+                                <option value="A">A</option>
+                                <option value="B" selected>B</option>
+                                <option value="C">C</option>
+                                <option value="D">D</option>
+                                <option value="E">E</option>
+                                <option value="F">F</option>
+                                <option value="G">G</option>
+                            </select>
+                        </div>
+                        <div class="skill-stats">Pace Chaser
+                            <select id="aptPace">
+                            <option value="S">S</option>
+                                <option value="A" selected>A</option>
+                                <option value="B">B</option>
+                                <option value="C">C</option>
+                                <option value="D">D</option>
+                                <option value="E">E</option>
+                                <option value="F">F</option>
+                                <option value="G">G</option>
+                            </select>
+                        </div>
+                        <div class="skill-stats">Late Surger
+                            <select id="aptLate">
+                            <option value="S">S</option>
+                                <option value="A">A</option>
+                                <option value="B">B</option>
+                                <option value="C">C</option>
+                                <option value="D">D</option>
+                                <option value="E">E</option>
+                                <option value="F" selected>F</option>
+                                <option value="G">G</option>
+                            </select>
+                        </div>
+                        <div class="skill-stats">End Closer
+                            <select id="aptEnd">
+                            <option value="S">S</option>
+                                <option value="A">A</option>
+                                <option value="B">B</option>
+                                <option value="C">C</option>
+                                <option value="D">D</option>
+                                <option value="E">E</option>
+                                <option value="F">F</option>
+                                <option value="G" selected>G</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
             </div>
-            <!-- Comparison result row -->
-            <div id="comparisonDetails" class="mt-4 p-3 rounded-4 small" style="min-height: 70px; background: var(--bg-light-custom);">Enter stats and see difference vs recommended.</div>
         </div>
-    </div>
 
-    <!-- 4. RECOVERY SKILLS LIBRARY -->
-    <div class="card-premium">
-        <div class="card-header-custom"><i class="bi bi-droplet-half me-2"></i>4. Recovery Skills (Stamina Modifiers)</div>
-        <div class="p-3">
-            <div id="skillLibraryContainer" class="skill-container"></div>
-            <div class="alert alert-info mt-3 mb-0 small">
-                💡 Total STAMINA Reduction: <strong id="totalStaReduction">0</strong> points (affects Recommended & Optimized targets value).
+        <!-- 2. TARGET -->
+        <div class="card">
+            <div class="card-header"><i class="bi bi-bullseye"></i> Target Build</div>
+            <div class="card-body">
+                <div class="form-grid-2">
+                    <div class="form-group">
+                        <span class="form-label">Distance</span>
+                        <select id="targetDist">
+                            <option value="Sprint">Sprint (1200-1400m)</option>
+                            <option value="Mile" selected>Mile (1400-1800m)</option>
+                            <option value="Medium">Medium (1800-2400m)</option>
+                            <option value="Long">Long (2400m+)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <span class="form-label">Style</span>
+                        <select id="targetStyle">
+                            <option value="Front">Front Runner</option>
+                            <option value="Pace" selected>Pace Chaser</option>
+                            <option value="Late">Late Surger</option>
+                            <option value="End">End Closer</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <span class="form-label">Surface</span>
+                        <select id="targetSurface">
+                            <option value="Turf" selected>Turf</option>
+                            <option value="Dirt">Dirt</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="optimizerAlert" class="alert"></div>
             </div>
-            <button id="resetRec" class="btn btn-sm btn-outline-primary w-100 mt-5">
-                <i class="bi bi-arrow-repeat"></i> Reset Selection
-            </button>
         </div>
+      
+        <!-- STATS -->
+        <div class="card">
+            <div class="card-header"><i class="bi bi-table"></i> Stats · 1–5000</div>
+            <div class="card-body">
+                <div class="form-grid-2" style="margin-bottom:1.2rem;">
+                    <div class="form-group"><span class="form-label">SPD</span><input type="number" id="userSpd" min="1" max="5000" value="100"></div>
+                    <div class="form-group"><span class="form-label">STA</span><input type="number" id="userSta" min="1" max="5000" value="100"></div>
+                    <div class="form-group"><span class="form-label">PWR</span><input type="number" id="userPwr" min="1" max="5000" value="100"></div>
+                    <div class="form-group"><span class="form-label">GUT</span><input type="number" id="userGut" min="1" max="5000" value="100"></div>
+                    <div class="form-group"><span class="form-label">WIT</span><input type="number" id="userWit" min="1" max="5000" value="100"></div>
+                </div>
+
+                <div class="led-divider thick">
+                    <div class="line"></div>
+                        <span class="label">Minimum</span>
+                        <div class="line line-right">
+                    </div>
+                </div>
+                <div class="stat-grid" id="minStats"></div>
+                
+                <div class="led-divider thick">
+                    <div class="line"></div>
+                        <span class="label">Recommended</span>
+                        <div class="line line-right">
+                    </div>
+                </div>
+                <div class="stat-grid" style="margin-top:0.8rem;" id="recStats"></div>
+                
+                <div class="led-divider thick">
+                    <div class="line"></div>
+                        <span class="label">Optimized</span>
+                        <div class="line line-right">
+                    </div>
+                </div>
+                <div class="stat-grid" style="margin-top:0.8rem;" id="optStats"></div>
+
+                <button id="compareBtn" class="btn btn-accent btn-block" style="margin-top:1.2rem;">
+                    <i class="bi bi-arrow-repeat"></i> Refresh
+                </button>
+
+                <div id="comparisonDetails" class="comparison-box">
+                    <div class="diff-row"><span>Enter stats to see comparison.</span></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- RECOVERY SKILLS -->
+        <div class="card">
+            <div class="card-header"><i class="bi bi-droplet-half"></i> Recovery Skills</div>
+            <div class="card-body">
+                <div id="skillLibraryContainer" class="skill-container"></div>
+                <div class="skill-stats">
+                    <span>Total STA Reduction: <strong id="totalStaReduction">0</strong></span>
+                    <span style="color:var(--text-muted);font-size:0.75rem;">(applied to Recommended & Optimized)</span>
+                </div>
+                <button id="resetRec" class="btn btn-block" style="margin-top:1rem;">
+                    <i class="bi bi-arrow-repeat"></i> Reset Selection
+                </button>
+            </div>
+        </div>
+        
+        
+        <!-- FOOTER -->
+        <footer class="site-footer">
+            <span>Optimizer selects best distance based on aptitudes.</span>
+            <span>Made by <a href="#">Mikazuki</a> · <a href="uma.html" download>Download</a></span>
+        </footer>
+
     </div>
-    <footer class="text-center small mt-2">
-        Optimizer selects the best distance automatically if character has higher aptitude elsewhere.
-        <strong>Made by Mikazuki</strong>
-    </footer>
-    <p class="text-center m-2"><a href="uma.html" download="uma.html" style="opacity: 70%;">Download</a></p>
 
-</div>
-
-<script>
-    /* ---------- COMPLETE STAMINA SKILL LIST ----------*/
-	const pp = [];
-
-	const recovery = ("Introduction to Physiology,Clear Heart,Super-Duper Stoked,U=ma2,Pure Heart,Super-Duper Climax,Swinging Maestro,Corner Recovery ○,Breath of Fresh Air,Straightaway Recovery,Iron Will,Lay Low,Indomitable,Pace Strategy,Unruffled,Calm in a Crowd,Calm and Collected,Stamina to Spare,Race Planner,Preferred Position,Sleeping Lion,Standing By,Wait-and-See,Keen Eye,Watchful Eye,Trackblazer,Rosy Outlook,Cooldown,Deep Breaths,Adrenaline Rush,Extra Tank,Miraculous Step,Soft Step,Passing Pro,Restless,Moxie,Gourmand,Hydrate,Relax,A Small Breather,Go-Home Specialist,After-School Stroll,Serenity,Levelheaded,Triple 7s,Shake It Out,Superior Heal,Dazzl'n ♪ Diver,Every Rose Has Its Fangs,Lie in Wait,Be Still,VIP Pass,Familiar Ground,Cheers of a Fellow Dreamer,Ready,Go!,Go, Go, Mun!,Of Calm Mind,Free-Spirited,Keep Pushing Ahead,Master of the Sands,Ignited Spirit STA,Burning Spirit STA") .split(",")
-
-
-    async function loadSkills() {
-	    const xhr = new XMLHttpRequest();
-		xhr.open('GET', 'https://gametora.com/data/umamusume/skills.09c64d6a.json', false); // false = sync
-		xhr.send();
-
-		if (xhr.status === 200) {
-	        const freshData = JSON.parse(xhr.responseText);
-	        if (freshData && freshData.length) {
-	            localStorage.setItem('uma_skills', JSON.stringify(freshData));
-	        }
-	    }
-    	console.log("Using GameTora Skill List")
-	}
-    
-    let skill;
-
-    if(window.skillData) {
-    	skill = window.skillData
-    	console.log("Using Local Skill List")
-    } else {
-    	loadSkills()
-    	skill = JSON.parse(localStorage.getItem("uma_skills"))
-    }
-
-	skill.forEach(s => s.condition_groups.forEach(x => {
-		if(x.effects.find(o => o.type == 9) && recovery.includes(s.name_en)) pp.push(s);
-	}))
-
-    const staminaSkillsFull = pp.map(p => p.name_en)?.sort();
-    
-    let selectedRecoverySkills = [];
-
-
-    const user = {
-        spd: parseInt(document.getElementById('userSpd').value) || 0,
-        sta: parseInt(document.getElementById('userSta').value) || 0,
-        pwr: parseInt(document.getElementById('userPwr').value) || 0,
-        gut: parseInt(document.getElementById('userGut').value) || 0,
-        wit: parseInt(document.getElementById('userWit').value) || 0
-    };
-    
-    function getSkillStaminaReduction(skill) {
-    	let data = pp.find(p => skill == p.name_en)
-
-    	let skilldatas = data?.condition_groups.flatMap(x => x.effects).find(u => u.type == 9);
-
-    	if(!skilldatas) return 0;
-
-    	const raw = (skilldatas.value / 1e4)
-
-    	return Math.round(user.sta * raw)
-    }
-    
-    // aptitude letter to multiplier (S->1.15, A->1.05, B->1.0, C->0.92, D->0.85, E->0.75, F->0.65, G->0.55)
-    function aptMultiplier(letter, type) {
-	    // type: 'surface', 'dist', or 'style'
-    	// console.log(letter, type)
-
-    	type = type.toLowerCase()
-    	letter = letter.toUpperCase()
-
-    	// console.log(arguments, letter, type)
-
-	    const penalties = {
-	        surface: { S: 0.05, A: 0, B: -0.10, C: -0.20, D: -0.30, E: -0.50, F: -0.70, G: -0.90 },
-	        dist:    { S: 0.05, A: 0, B: -0.10, C: -0.20, D: -0.40, E: -0.60, F: -0.80, G: -0.90 },
-	        style:   { S: 0.10, A: 0, B: -0.15, C: -0.25, D: -0.40, E: -0.60, F: -0.80, G: -0.90 }
-	    };
-	    const penalty = penalties[type][letter] || 0;
-
-	    // console.log(penalties[type][letter])
-	    // Stat multiplier = 1 / (1 + penalty)
-	    // If penalty -20% (0.8), multiplier = 1 ÷ 0.8 = 1.25
-	    return 1 / (1 + penalty);
-	}
-
-	function getCombinedMultiplier(turfLetter, distLetter, styleLetter, isDirt) {
-	    const surface = isDirt ? 'dirt' : 'turf';
-
-	    const surfaceMult = aptMultiplier(turfLetter, 'surface');
-	    const distMult = aptMultiplier(distLetter, 'dist');
-	    const styleMult = aptMultiplier(styleLetter, 'style');
-
-	    return [surfaceMult, distMult, styleMult]
-	}
-    
-    // get distance aptitude value based on distance type
-    function getDistanceApt(distType) {
-        const map = { Sprint: document.getElementById('aptSprint').value, Mile: document.getElementById('aptMile').value, Medium: document.getElementById('aptMedium').value, Long: document.getElementById('aptLong').value };
-        return map[distType] || "B";
-    }
-    
-    function getStyleApt(styleType) {
-        const map = { Front: document.getElementById('aptFront').value, Pace: document.getElementById('aptPace').value, Late: document.getElementById('aptLate').value, End: document.getElementById('aptEnd').value };
-        return map[styleType] || "B";
-    }
-    
-    // base stat recommendations (min/rec) based on distance, style, surface (pre-aptitude)
-    function getBaseTargets(distance, style, surface) {
-        let minBase = {}, recBase = {};
-        switch(distance) {
-            case 'Sprint': minBase = { spd:680, sta:280, pwr:480, gut:250, wit:250 }; recBase = { spd:880, sta:380, pwr:680, gut:380, wit:380 }; break;
-            case 'Mile': minBase = { spd:760, sta:400, pwr:540, gut:300, wit:330 }; recBase = { spd:960, sta:550, pwr:740, gut:440, wit:500 }; break;
-            case 'Medium': minBase = { spd:780, sta:520, pwr:580, gut:350, wit:380 }; recBase = { spd:980, sta:720, pwr:780, gut:500, wit:550 }; break;
-            case 'Long': minBase = { spd:740, sta:780, pwr:600, gut:400, wit:430 }; recBase = { spd:940, sta:980, pwr:800, gut:550, wit:600 }; break;
-            default: minBase = { spd:700, sta:450, pwr:550, gut:320, wit:360 }; recBase = { spd:900, sta:650, pwr:700, gut:450, wit:480 };
-        }
-        const styleFactor = { spd:1, sta:1, pwr:1, gut:1, wit:1 };
-        if (style === 'Front') { styleFactor.spd = 1.18; styleFactor.sta = 1.02; styleFactor.pwr = 0.96; styleFactor.gut = 0.92; styleFactor.wit = 0.92; }
-        if (style === 'Pace') { styleFactor.spd = 1.08; styleFactor.sta = 1.0; styleFactor.pwr = 1.08; styleFactor.gut = 0.96; styleFactor.wit = 1.02; }
-        if (style === 'Late') { styleFactor.spd = 1.03; styleFactor.sta = 0.98; styleFactor.pwr = 1.14; styleFactor.gut = 0.96; styleFactor.wit = 1.05; }
-        if (style === 'End') { styleFactor.spd = 0.96; styleFactor.sta = 1.08; styleFactor.pwr = 1.1; styleFactor.gut = 1.08; styleFactor.wit = 1.0; }
-        const apply = (obj) => ({ spd: Math.round(obj.spd * styleFactor.spd), sta: Math.round(obj.sta * styleFactor.sta), pwr: Math.round(obj.pwr * styleFactor.pwr), gut: Math.round(obj.gut * styleFactor.gut), wit: Math.round(obj.wit * styleFactor.wit) });
-        let min = apply(minBase); let rec = apply(recBase);
-        if (surface === 'Dirt') {
-            min = { spd: Math.max(620, min.spd-30), sta: min.sta, pwr: min.pwr+50, gut: min.gut+20, wit: min.wit };
-            rec = { spd: Math.max(720, rec.spd-20), sta: rec.sta, pwr: rec.pwr+60, gut: rec.gut+30, wit: rec.wit };
-        }
-        return { min, rec };
-    }
-
-    function aptitudeScore(letter) {
-	    const scores = {
-	        "S": 100,
-	        "A": 80,
-	        "B": 60,
-	        "C": 40,
-	        "D": 20,
-	        "E": 10,
-	        "F": 5,
-	        "G": 0
-	    };
-	    return scores[letter] || 50;
-	}
-    
-    // apply aptitude penalties
-    function applyAptitude(base, turfApt, dirtApt, distAptLetter, styleAptLetter, surface, distanceType) {
-        // const surfaceMult = (surface === 'Turf') ? aptMultiplier(turfApt) : aptMultiplier(dirtApt);
-        // const distMult = aptMultiplier(distAptLetter);
-        // const styleMult = aptMultiplier(styleAptLetter);
-
-        const [surfaceMult, distMult, styleMult] = getCombinedMultiplier(turfApt, distAptLetter, styleAptLetter, surface.toLowerCase())
-
-        const adjustStat = (val, statType) => {
-            if (statType === 'sta') return Math.round(val * distMult);
-            if (statType === 'spd') return Math.round(val * Math.min(surfaceMult, distMult));
-            if (statType === 'pwr') return Math.round(val * surfaceMult);
-            if (statType === 'gut') return Math.round(val * styleMult);
-            return Math.round(val * styleMult);
-        };
-
-        const adjustObj = (obj) => ({ 
-        	spd: adjustStat(obj.spd, 'spd'), 
-        	sta: adjustStat(obj.sta, 'sta'), 
-        	pwr: adjustStat(obj.pwr, 'pwr'), 
-        	gut: adjustStat(obj.gut, 'gut'), 
-        	wit: adjustStat(obj.wit, 'wit') 
-        });
-
-        return { min: adjustObj(base.min), rec: adjustObj(base.rec) };
-    }
-    
-    // smart optimizer: find best distance based on aptitudes and target style/surface
-    function getOptimizedDistance(targetStyle, targetSurface) {
-        const distances = ['Sprint', 'Mile', 'Medium', 'Long'];
-        let bestDist = 'Medium';
-        let bestScore = -1;
-        const turfApt = document.getElementById('aptTurf').value;
-        const dirtApt = document.getElementById('aptDirt').value;
-        const styleApt = getStyleApt(targetStyle);
-
-        for (let d of distances) {
-            const distApt = getDistanceApt(d);
-            const surface = targetSurface;
-
-            const surfaceMult = aptitudeScore(turfApt)
-            const distMult = aptitudeScore(distApt)
-            const styleMult = aptitudeScore(styleApt)
-
-
-            const score = (surfaceMult + distMult + styleMult) / 3;
-            if (score > bestScore) { 
-            	bestScore = score; 
-            	bestDist = d; 
-            }
-            // console.log(d, score, surfaceMult, distMult, styleMult)
-        }
-        return bestDist;
-    }
-    
-    let currentRecStats = { spd: 0, sta: 0, pwr: 0, gut: 0, wit: 0 };
-    let currentMinStats = { spd: 0, sta: 0, pwr: 0, gut: 0, wit: 0 };
-
-
-    function consDiff(v1, v2) {
-    	const v = v2 - v1;
-    	let className = v >= 0 ? 'comparison-up' : 'comparison-down';
-        let symbol = v >= 0 ? '+' : '';
-        
-        return `<span class="${className} me-3 fs-4">(${symbol}${v})</span><hr>`;
-    }
-
-    function refreshAll() {
-        const turfApt = document.getElementById('aptTurf').value;
-        const dirtApt = document.getElementById('aptDirt').value;
-        const targetDist = document.getElementById('targetDist').value;
-        const targetStyle = document.getElementById('targetStyle').value;
-        const targetSurface = document.getElementById('targetSurface').value;
-        const styleApt = getStyleApt(targetStyle);
-        const distAptLetter = getDistanceApt(targetDist);
-
-
-        user.spd = parseInt(document.getElementById('userSpd').value) || 0;
-        user.sta = parseInt(document.getElementById('userSta').value) || 0;
-        user.pwr = parseInt(document.getElementById('userPwr').value) || 0;
-        user.gut = parseInt(document.getElementById('userGut').value) || 0;
-        user.wit = parseInt(document.getElementById('userWit').value) || 0;
-	    
-        
-        const base = getBaseTargets(targetDist, targetStyle, targetSurface);
-        const aptAdjusted = applyAptitude(base, turfApt, dirtApt, distAptLetter, styleApt, targetSurface, targetDist);
-        const totalRecovery = selectedRecoverySkills.reduce((acc, s) => acc + getSkillStaminaReduction(s), 0);
-        const finalMin = { ...aptAdjusted.min };
-        const finalRec = { spd: aptAdjusted.rec.spd, sta: Math.max(300, aptAdjusted.rec.sta - totalRecovery), pwr: aptAdjusted.rec.pwr, gut: aptAdjusted.rec.gut, wit: aptAdjusted.rec.wit };
-        currentMinStats = finalMin; currentRecStats = finalRec;
-        
-        document.getElementById('minStats').innerHTML = `
-        	<div class="stat-label-sm">Speed</div>
-        	<div class="stat-value-lg">${finalMin.spd} ${consDiff(finalMin.spd, user.spd)}</div>
-        	<hr>
-        	<div class="stat-label-sm">Stamina</div>
-        	<div class="stat-value-lg">${finalMin.sta} ${consDiff(finalMin.sta, user.sta)}</div>
-        	<hr>
-        	<div class="stat-label-sm">Power</div>
-        	<div class="stat-value-lg">${finalMin.pwr} ${consDiff(finalMin.pwr, user.pwr)}</div>
-        	<hr>
-        	<div class="stat-label-sm">Gut</div>
-        	<div class="stat-value-lg">${finalMin.gut} ${consDiff(finalMin.gut, user.gut)}</div>
-        	<hr>
-        	<div class="stat-label-sm">Wit</div>
-        	<div class="stat-value-lg">${finalMin.wit} ${consDiff(finalMin.wit, user.wit)}</div>
-        	<hr>
-        `;
-
-        document.getElementById('recStats').innerHTML = `
-        	<div class="stat-label-sm">Speed</div>
-        	<div class="stat-value-lg">${finalRec.spd} ${consDiff(finalRec.spd, user.spd)}</div>
-        	<hr>
-        	<div class="stat-label-sm">Stamina</div>
-        	<div class="stat-value-lg">${finalRec.sta} ${consDiff(finalRec.sta, user.sta)}</div>
-        	<hr>
-        	<div class="stat-label-sm">Power</div>
-        	<div class="stat-value-lg">${finalRec.pwr} ${consDiff(finalRec.pwr, user.pwr)}</div>
-        	<hr>
-        	<div class="stat-label-sm">Gut</div>
-        	<div class="stat-value-lg">${finalRec.gut} ${consDiff(finalRec.gut, user.gut)}</div>
-        	<hr>
-        	<div class="stat-label-sm">Wit</div>
-        	<div class="stat-value-lg">${finalRec.wit} ${consDiff(finalRec.wit, user.wit)}</div>
-        	<hr>
-        `;
-
-        document.getElementById('totalStaReduction').innerText = totalRecovery;
-        
-        // Optimized: choose best distance
-        const optDist = getOptimizedDistance(targetStyle, targetSurface);
-        const optBase = getBaseTargets(optDist, targetStyle, targetSurface);
-        const optDistApt = getDistanceApt(optDist);
-        const optAdjusted = applyAptitude(optBase, turfApt, dirtApt, optDistApt, styleApt, targetSurface, optDist);
-        const finalOpt = { spd: optAdjusted.rec.spd, sta: Math.max(300, optAdjusted.rec.sta - totalRecovery), pwr: optAdjusted.rec.pwr, gut: optAdjusted.rec.gut, wit: optAdjusted.rec.wit };
-        document.getElementById('optStats').innerHTML = `
-        	<div class="stat-label-sm">Speed</div>
-        	<div class="stat-value-lg">${finalOpt.spd} ${consDiff(finalOpt.spd, user.spd)}</div>
-        	<hr>
-        	<div class="stat-label-sm">Stamina</div>
-        	<div class="stat-value-lg">${finalOpt.sta} ${consDiff(finalOpt.sta, user.sta)}</div>
-        	<hr>
-        	<div class="stat-label-sm">Power</div>
-        	<div class="stat-value-lg">${finalOpt.pwr} ${consDiff(finalOpt.pwr, user.pwr)}</div>
-        	<hr>
-        	<div class="stat-label-sm">Gut</div>
-        	<div class="stat-value-lg">${finalOpt.gut} ${consDiff(finalOpt.gut, user.gut)}</div>
-        	<hr>
-        	<div class="stat-label-sm">Wit</div>
-        	<div class="stat-value-lg">${finalOpt.wit} ${consDiff(finalOpt.wit, user.wit)}</div>
-        	<hr>
-        `;
-        
-        const alertDiv = document.getElementById('optimizerAlert');
-        if (optDist !== targetDist) {
-            alertDiv.style.display = 'block';
-            alertDiv.innerHTML = `<i class="bi bi-lightbulb"></i> 💡 Optimizer suggests using <strong>${optDist}</strong> distance instead of ${targetDist} — Your character has higher aptitude for ${optDist}. This will yield better performance.`;
-        } else {
-            alertDiv.style.display = 'none';
-        }
-    }
-    
-    function compareStats() {
-        const rec = currentRecStats;
-        const userSpd = parseInt(document.getElementById('userSpd').value) || 0;
-        const userSta = parseInt(document.getElementById('userSta').value) || 0;
-        const userPwr = parseInt(document.getElementById('userPwr').value) || 0;
-        const userGut = parseInt(document.getElementById('userGut').value) || 0;
-        const userWit = parseInt(document.getElementById('userWit').value) || 0;
-        
-        const userStats = { spd: userSpd, sta: userSta, pwr: userPwr, gut: userGut, wit: userWit };
-        const statsList = ['spd', 'sta', 'pwr', 'gut', 'wit'];
-        const names = { spd:'SPD', sta:'STA', pwr:'PWR', gut:'GUT', wit:'WIT' };
-        let diffHtml = '';
-        for (let s of statsList) {
-            let diff = userStats[s] - rec[s];
-            let className = diff >= 0 ? 'comparison-up' : 'comparison-down';
-            let symbol = diff >= 0 ? '▲' : '▼';
-            diffHtml += `<span class="${className} me-3">${names[s]}: ${userStats[s]} / ${rec[s]} (${symbol}${Math.abs(diff)})</span><hr>`;
-        }
-        const meets = (userStats.spd >= rec.spd && userStats.sta >= rec.sta && userStats.pwr >= rec.pwr && userStats.gut >= rec.gut && userStats.wit >= rec.wit);
-        const conclusion = meets ? '✅ All stats meet or exceed recommended. Strong build!' : '⚠️ Some stats below recommendations. Focus training on deficits.';
-        document.getElementById('comparisonDetails').innerHTML = `<div class="mb-1">${diffHtml}</div><div class="mt-2">${conclusion}</div>`;
-    }
-
-    function checkRare(t) {
-        // const rpx = { 1: "", 2: "gold_grad", 3: "unique", 4: "uni_gold", 5: "uni_gold" };skill-badge-gold
-        if(isNaN(t)) return "";
-        return t < 2 ? "" : "skill-badge-gold"
-    }
-    
-    function buildSkillLibrary() {
-        const container = document.getElementById('skillLibraryContainer');
-        container.innerHTML = '';
-        staminaSkillsFull.forEach(skill => {
-            const isActive = selectedRecoverySkills.includes(skill);
-            const rarity = pp.find(s => s.name_en == skill);
-            const span = document.createElement('span');
-            span.className = `skill-badge ${isActive ? 'skill-active' : ''} ${checkRare(rarity?.rarity)}`;
-            span.innerText = skill?.toString();
-            span.onclick = () => {
-                if (selectedRecoverySkills.includes(skill)) selectedRecoverySkills = selectedRecoverySkills.filter(s => s !== skill);
-                else selectedRecoverySkills.push(skill);
-                buildSkillLibrary();
-                refreshAll();
-                compareStats();
-            };
-            container.appendChild(span);
-        });
-    }
-    
-    function bindEvents() {
-        const aptIds = ['aptTurf', 'aptDirt', 'aptSprint', 'aptMile', 'aptMedium', 'aptLong', 'aptFront', 'aptPace', 'aptLate', 'aptEnd', 'targetDist', 'targetStyle', 'targetSurface'];
-        aptIds.forEach(id => document.getElementById(id).addEventListener('change', () => { refreshAll(); compareStats(); }));
-        document.getElementById('compareBtn').addEventListener('click', () => { refreshAll(); compareStats(); });
-        ['userSpd', 'userSta', 'userPwr', 'userGut', 'userWit'].forEach(id => document.getElementById(id).addEventListener('input', compareStats));
-
-        document.getElementById("resetRec").addEventListener("click", () => {
-            selectedRecoverySkills = []
-            buildSkillLibrary();
-            refreshAll();
-            compareStats();
-        })
-    }
-    
-    // Dark Mode Toggle Functionality
-    function initDarkMode() {
-        const toggleBtn = document.getElementById('darkModeToggle');
-        const body = document.body;
-        const icon = toggleBtn.querySelector('i');
-        const text = toggleBtn.querySelector('span');
-        
-        // Default to dark mode
-        body.classList.remove('light-mode');
-        icon.className = 'bi bi-moon-fill';
-        text.textContent = 'Dark Mode';
-        
-        toggleBtn.addEventListener('click', () => {
-            body.classList.toggle('light-mode');
-            
-            if (body.classList.contains('light-mode')) {
-                icon.className = 'bi bi-sun-fill';
-                text.textContent = 'Light Mode';
-            } else {
-                icon.className = 'bi bi-moon-fill';
-                text.textContent = 'Dark Mode';
-            }
-        });
-    }
-    
-    buildSkillLibrary();
-    bindEvents();
-    refreshAll();
-    compareStats();
-    initDarkMode();
-</script>
 </body>
 </html>
