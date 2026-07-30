@@ -520,6 +520,7 @@
         }
     </style>
 	<script src="skill.js"></script>
+	<script src="cat.js"></script>
     <script>
     	window.skillData = (typeof skillData !== 'undefined') ? skillData : null;
     </script>
@@ -658,7 +659,7 @@
     let currentSkillArray = [];      // full unfiltered master list (original loaded data)
     let filteredSkillArray = [];      // after fuzzy search + type filter
     let originalRawSkills = [];
-    let currentActiveUrl = "https://gametora.com/data/umamusume/skills.528f3ead.json";
+    let currentActiveUrl = (typeof(SKL) != "undefined") ? SKL : "https://gametora.com/data/umamusume/skills.528f3ead.json";
     let isLoading = false;
     let usingLocalFallback = false;
     let currentSearchTerm = "";
